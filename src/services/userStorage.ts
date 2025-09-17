@@ -1,0 +1,69 @@
+// Simple in-memory user storage for demo purposes
+// In production, use a proper database
+
+interface UserData {
+  phoneNumber: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: Date;
+  yahooUserId?: string;
+}
+
+// In-memory storage (will reset when app restarts)
+const users = new Map<string, UserData>();
+
+export function storeUserToken(phoneNumber: string, tokenData: {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}) {
+  const expiresAt = new Date(Date.now() + tokenData.expiresIn * 1000);
+  
+  users.set(phoneNumber, {
+    phoneNumber,
+    accessToken: tokenData.accessToken,
+    refreshToken: tokenData.refreshToken,
+    expiresAt,
+  });
+  
+  console.log(`Stored token for user: ${phoneNumber}`);
+}
+
+export function getUserToken(phoneNumber: string): UserData | undefined {
+  return users.get(phoneNumber);
+}
+
+export function isTokenExpired(userData: UserData): boolean {
+  return new Date() >= userData.expiresAt;
+}
+
+export function getAllUsers(): UserData[] {
+  return Array.from(users.values());
+}
+
+export function deleteUser(phoneNumber: string): boolean {
+  return users.delete(phoneNumber);
+}
+
+// Generate a temporary link code for OAuth flow
+const linkCodes = new Map<string, string>();
+
+export function generateLinkCode(phoneNumber: string): string {
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  linkCodes.set(code, phoneNumber);
+  
+  // Expire after 10 minutes
+  setTimeout(() => {
+    linkCodes.delete(code);
+  }, 10 * 60 * 1000);
+  
+  return code;
+}
+
+export function getPhoneNumberFromLinkCode(code: string): string | undefined {
+  const phoneNumber = linkCodes.get(code);
+  if (phoneNumber) {
+    linkCodes.delete(code); // One-time use
+  }
+  return phoneNumber;
+}
