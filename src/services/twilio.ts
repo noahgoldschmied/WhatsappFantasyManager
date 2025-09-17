@@ -6,9 +6,20 @@ const client = Twilio(
 );
 
 export async function sendWhatsApp(to: string, body: string) {
-  return client.messages.create({
-    from: process.env.TWILIO_WHATSAPP_NUMBER!,
-    to: `whatsapp:${to}`,
-    body,
-  });
+  console.log(`Attempting to send WhatsApp to: ${to}`);
+  console.log(`Message body: ${body}`);
+  
+  try {
+    const result = await client.messages.create({
+      from: process.env.TWILIO_WHATSAPP_NUMBER!,
+      to: `whatsapp:${to}`,
+      body,
+    });
+    
+    console.log(`WhatsApp message sent successfully. SID: ${result.sid}`);
+    return result;
+  } catch (error) {
+    console.error("Failed to send WhatsApp message:", error);
+    throw error;
+  }
 }
