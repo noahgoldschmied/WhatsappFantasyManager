@@ -1,0 +1,31 @@
+name: fantasy-whatsapp-bot
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: noahgoldschmied/boardy_interview_project
+    branch: main
+  run_command: npm start
+  build_command: npm run build
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: PORT
+    value: "8080"
+  - key: BASE_URL
+    scope: RUN_TIME
+  - key: TWILIO_ACCOUNT_SID
+    scope: RUN_TIME
+  - key: TWILIO_AUTH_TOKEN
+    scope: RUN_TIME
+  - key: TWILIO_WHATSAPP_NUMBER
+    scope: RUN_TIME
+  - key: YAHOO_APP_ID
+    scope: RUN_TIME
+  - key: YAHOO_CLIENT_ID
+    scope: RUN_TIME
+  - key: YAHOO_CLIENT_SECRET
+    scope: RUN_TIME
+  - key: YAHOO_REDIRECT_URI
+    scope: RUN_TIME
