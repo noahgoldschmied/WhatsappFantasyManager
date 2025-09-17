@@ -25,16 +25,16 @@ router.post("/whatsapp", async (req, res) => {
   try {
     if (lowerBody === "help") {
       await helpCommand({ from });
-      return res.sendStatus(200);
+      return;
     }
     if (lowerBody === "link") {
       await linkCommand({ from });
-      return res.sendStatus(200);
+      return;
     }
     const userData = getUserToken(from);
     if (!userData) {
       await authRequiredCommand({ from });
-      return res.sendStatus(200);
+      return;
     }
     if (isTokenExpired(userData)) {
       try {
@@ -46,42 +46,48 @@ router.post("/whatsapp", async (req, res) => {
       } catch (error) {
         console.error("Token refresh failed:", error);
         await tokenExpiredCommand({ from });
-        return res.sendStatus(200);
+        return;
       }
     }
     if (lowerBody === "show teams") {
       await showTeamsCommand({ from, accessToken: userData.accessToken });
-      return res.sendStatus(200);
+      return;
     }
     if (lowerBody === "show team") {
       await showTeamCommand({ from });
-      return res.sendStatus(200);
+      return;
     }
     if (lowerBody.startsWith("get roster")) {
       const parts = body.split(/\s+/);
       if (parts.length < 3) {
         await helpCommand({ from });
-        return res.sendStatus(200);
+        return;
       }
-      const teamKey = parts[2];
+      // Accept team name instead of team key
+      const teamName = parts.slice(2).join(" ");
+      const { getUserTeamsDict } = await import("../services/userStorage");
+      const teamsDict = getUserTeamsDict(from);
+      let teamKey = teamName;
+      if (teamsDict && teamsDict[teamName]) {
+        teamKey = teamsDict[teamName];
+      }
       await getRosterCommand({ from, accessToken: userData.accessToken, teamKey });
-      return res.sendStatus(200);
+      return;
     }
     if (lowerBody.startsWith("drop ")) {
       const player = originalBody.slice(5);
       await dropPlayerCommand({ from, player });
-      return res.sendStatus(200);
+      return;
     }
     if (lowerBody === "yes") {
       await confirmDropCommand({ from });
-      return res.sendStatus(200);
+      return;
     }
     await defaultResponseCommand({ from, body });
   } catch (error) {
     console.error("Webhook error:", error);
     await defaultResponseCommand({ from, body });
   }
-  res.sendStatus(200);
 });
 
 export default router;
