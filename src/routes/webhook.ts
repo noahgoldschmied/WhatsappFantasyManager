@@ -78,19 +78,8 @@ Send "link" to get started.`);
     if (lowerBody === "show teams") {
       try {
         const teamsData = await getUserTeams(userData.accessToken);
-        // Parse Yahoo API response (it has a complex nested structure)
-        let teamsText = "🏈 *Your Fantasy Teams:*\n\n";
-        
-        // This is a simplified parser - you may need to adjust based on actual API response
-        if (teamsData.fantasy_content?.users?.[0]?.user?.[1]?.games) {
-          const games = teamsData.fantasy_content.users[0].user[1].games;
-          // Parse teams from the complex Yahoo structure
-          teamsText += "Teams found! (Raw data logged for debugging)";
-        } else {
-          teamsText += "No teams found or unexpected API response format.";
-        }
-        
-        console.log("Teams API response:", JSON.stringify(teamsData, null, 2));
+        // Send the entire raw JSON to the user for debugging
+        const teamsText = "RAW JSON:\n" + JSON.stringify(teamsData);
         await sendWhatsApp(from, teamsText);
       } catch (error) {
         console.error("Get teams error:", error);
@@ -100,8 +89,38 @@ Send "link" to get started.`);
     }
 
     // Get roster command
-    if (lowerBody === "get roster") {
-      await sendWhatsApp(from, "🔄 Getting roster feature is in development. First, use 'show teams' to see your team keys.");
+    // Get roster command (demo: expects 'get roster [team_key]')
+    if (lowerBody.startsWith("get roster")) {
+      const parts = body.split(/\s+/);
+      if (parts.length < 3) {
+        await sendWhatsApp(from, "ℹ️ To view your roster, reply with 'get roster [team_key]'.\n\nFirst, use 'show teams' to see your team keys.");
+        return res.sendStatus(200);
+      }
+      const teamKey = parts[2];
+      try {
+        const rosterData = await getTeamRoster(teamKey, userData.accessToken);
+        // Parse Yahoo API response (simplified, may need adjustment)
+        let players = [];
+        try {
+          const team = rosterData.fantasy_content.team;
+          const roster = team[1].roster;
+          const playerArray = roster[0].players;
+          for (const p of playerArray) {
+            const player = p.player;
+            const name = player[1].name?.full || player[1].name || "?";
+            const pos = player[1].display_position || player[1].position_type || "";
+            players.push(`${name} (${pos})`);
+          }
+        } catch (e) {
+          players = ["Could not parse roster data. Raw: " + JSON.stringify(rosterData)];
+        }
+        let msg = `📋 *Roster for team:* ${teamKey}\n\n`;
+        msg += players.length ? players.join("\n") : "No players found.";
+        await sendWhatsApp(from, msg);
+      } catch (error) {
+        console.error("Get roster error:", error);
+        await sendWhatsApp(from, "❌ Failed to get roster. Make sure your team key is correct. Use 'show teams' to see your team keys.");
+      }
       return res.sendStatus(200);
     }
 
