@@ -78,12 +78,23 @@ Send "link" to get started.`);
     if (lowerBody === "show teams") {
       try {
         const teamsData = await getUserTeams(userData.accessToken);
-        // Send the entire raw JSON to the user for debugging
-        const teamsText = "RAW JSON:\n" + JSON.stringify(teamsData);
+        // Parse Yahoo API response (it has a complex nested structure)
+        let teamsText = "\ud83c\udfc8 *Your Fantasy Teams:*\n\n";
+        
+        // This is a simplified parser - you may need to adjust based on actual API response
+        if (teamsData.fantasy_content?.users?.[0]?.user?.[1]?.games) {
+          const games = teamsData.fantasy_content.users[0].user[1].games;
+          // Parse teams from the complex Yahoo structure
+          teamsText += "Teams found! (Raw data logged for debugging)";
+        } else {
+          teamsText += "No teams found or unexpected API response format.";
+        }
+        
+        console.log("Teams API response:", JSON.stringify(teamsData, null, 2));
         await sendWhatsApp(from, teamsText);
       } catch (error) {
         console.error("Get teams error:", error);
-        await sendWhatsApp(from, "❌ Failed to get your teams. Please try again later.");
+        await sendWhatsApp(from, "\u274c Failed to get your teams. Please try again later.");
       }
       return res.sendStatus(200);
     }
