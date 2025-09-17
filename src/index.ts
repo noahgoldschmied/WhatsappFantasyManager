@@ -12,7 +12,7 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-app.use("/webhook/whatsapp", webhookRouter);
+app.use("/webhook", webhookRouter);
 app.use("/auth/yahoo", authRouter);
 
 const port = process.env.PORT || 3000;

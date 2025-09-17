@@ -5,7 +5,7 @@ import { getUserTeams, getTeamRoster, refreshAccessToken } from "../services/yah
 
 const router = Router();
 
-router.post("/", async (req, res) => {
+router.post("/whatsapp", async (req, res) => {
   const from = req.body.From?.replace("whatsapp:", "");
   const body = req.body.Body?.trim();
   const originalBody = body;
