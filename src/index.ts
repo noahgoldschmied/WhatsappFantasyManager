@@ -11,6 +11,14 @@ app.get("/", (req, res) => {
   res.send("⚽ Fantasy WhatsApp Bot is running on Heroku!");
 });
 
+// Test endpoint
+app.post("/test-webhook", (req, res) => {
+  console.log("TEST WEBHOOK CALLED!");
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
+  res.sendStatus(200);
+});
+
 // Routes
 app.use("/webhook", webhookRouter);
 app.use("/auth/yahoo", authRouter);
