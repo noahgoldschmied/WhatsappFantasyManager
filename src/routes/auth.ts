@@ -41,7 +41,7 @@ router.get("/callback", async (req, res) => {
           <p>Successfully linked your Yahoo Fantasy account to WhatsApp!</p>
           <p>Phone: ${phoneNumber}</p>
           <p>You can now use fantasy commands in WhatsApp.</p>
-          <p>Try sending: "show team" or "get roster"</p>
+          <p>Send "help" to see a list of commands!</p>
         `);
       }
     }
