@@ -7,6 +7,20 @@ interface UserData {
   refreshToken: string;
   expiresAt: Date;
   yahooUserId?: string;
+  userTeams?: Record<string, string>; // teamName -> teamKey
+}
+// Set the user's teams dictionary (teamName -> teamKey)
+export function setUserTeams(phoneNumber: string, teams: Record<string, string>) {
+  const user = users.get(phoneNumber);
+  if (user) {
+    user.userTeams = teams;
+  }
+}
+
+// Get the user's teams dictionary
+export function getUserTeamsDict(phoneNumber: string): Record<string, string> | undefined {
+  const user = users.get(phoneNumber);
+  return user?.userTeams;
 }
 
 // In-memory storage (will reset when app restarts)
