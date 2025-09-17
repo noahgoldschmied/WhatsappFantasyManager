@@ -7,8 +7,8 @@ const router = Router();
 router.get("/login", (req, res) => {
   const redirectUri = process.env.YAHOO_REDIRECT_URI;
   const clientId = process.env.YAHOO_CLIENT_ID;
-  const scope = "fspt-r"; // Fantasy Sports Read permission
-  const url = `https://api.login.yahoo.com/oauth2/request_auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+  // Try without scope first, or use 'fantasysports' if that doesn't work
+  const url = `https://api.login.yahoo.com/oauth2/request_auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
   res.redirect(url);
 });
 
