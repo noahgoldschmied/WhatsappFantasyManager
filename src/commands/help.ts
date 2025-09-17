@@ -8,7 +8,6 @@ export async function helpCommand({ from }: { from: string }) {
 
 *Team Info:*
 • show teams - Show your fantasy teams
-• show team - Show team details
 • get roster - Show your current roster
 
 *Management:*

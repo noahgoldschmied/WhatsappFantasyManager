@@ -1,5 +1,5 @@
 import { getUserTeams } from "../services/yahoo";
-import { setUserTeams } from "../services/userStorage";
+import { setUserTeams, getUserTeamsDict } from "../services/userStorage";
 import { sendWhatsApp } from "../services/twilio";
 
 export async function showTeamsCommand({ from, accessToken }: { from: string; accessToken: string }) {
@@ -8,12 +8,12 @@ export async function showTeamsCommand({ from, accessToken }: { from: string; ac
     let teamsText = "\ud83c\udfc8 *Your Fantasy Teams:*\n\n";
     const teamsDict = extractTeamsFromYahooResponse(teamsData);
     console.log("Extracted teams:", teamsDict);
-    const teamNames = Object.keys(teamsDict);
+    setUserTeams(from, teamsDict);
+    const teamNames = getUserTeamsDict(from) ? Object.keys(getUserTeamsDict(from)!) : [];
     if (teamNames.length > 0) {
       for (const name of teamNames) {
         teamsText += `• ${name}\n`;
       }
-      setUserTeams(from, teamsDict);
     } else {
       teamsText += "No teams found or unexpected API response format.";
     }

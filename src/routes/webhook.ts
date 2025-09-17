@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { conversationRouter } from "../services/conversationRouter";
+import { conversationRouter } from "../services/messageHandler";
 
 const router = Router();
 
