@@ -32,8 +32,6 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       }
     } else if (lowerBody === "show teams") {
       setConversationState(from, { type: "showTeams", step: "shown" });
-    } else if (lowerBody === "show team") {
-      setConversationState(from, { type: "showTeam", step: "shown" });
     } else if (lowerBody.startsWith("get roster")) {
       const parts = body.split(/\s+/);
       if (parts.length < 3) {

@@ -17,21 +17,23 @@ export async function stateHandler({ from, body, originalBody, state, userData }
   switch (state.type) {
     case "help":
       await helpCommand({ from });
+      clearConversationState(from);
       break;
     case "link":
       await linkCommand({ from });
+      clearConversationState(from);
       break;
     case "authRequired":
       await authRequiredCommand({ from });
+      clearConversationState(from); 
       break;
     case "tokenExpired":
       await tokenExpiredCommand({ from });
+      clearConversationState(from);
       break;
     case "showTeams":
       await showTeamsCommand({ from, accessToken: userData?.accessToken });
-      break;
-    case "showTeam":
-      await sendWhatsApp(from, "🔍 Show team details feature coming soon!");
+      clearConversationState(from);
       break;
     case "getRoster":
       if (state.step === "awaitingTeam") {
