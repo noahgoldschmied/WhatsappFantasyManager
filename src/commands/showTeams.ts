@@ -7,6 +7,7 @@ export async function showTeamsCommand({ from, accessToken }: { from: string; ac
     const teamsData = await getUserTeams(accessToken);
     let teamsText = "\ud83c\udfc8 *Your Fantasy Teams:*\n\n";
     const teamsDict = extractTeamsFromYahooResponse(teamsData);
+    console.log("Extracted teams:", teamsDict);
     const teamNames = Object.keys(teamsDict);
     if (teamNames.length > 0) {
       for (const name of teamNames) {
