@@ -9,7 +9,7 @@ import { tokenExpiredCommand } from "../commands/tokenExpired";
 import { dropPlayerCommand } from "../commands/dropPlayer";
 import { confirmDropCommand } from "../commands/confirmDrop";
 import { defaultResponseCommand } from "../commands/defaultResponse";
-import { showTeamCommand } from "../commands/showTeam";
+
 import { sendWhatsApp } from "./twilio";
 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
@@ -31,7 +31,7 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       await showTeamsCommand({ from, accessToken: userData?.accessToken });
       break;
     case "showTeam":
-      await showTeamCommand({ from });
+      await sendWhatsApp(from, "🔍 Show team details feature coming soon!");
       break;
     case "getRoster":
       if (state.step === "awaitingTeam") {
