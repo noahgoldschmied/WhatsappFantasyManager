@@ -21,13 +21,13 @@ export async function getRosterCommand({
 
     try {
       const team = rosterData.fantasy_content.team;
+      console.log("team data:", team);
       const roster = team[1].roster[0];
       const playersObj = roster.players;
       const count = playersObj.count;
 
       for (let i = 0; i < count; i++) {
         const playerArr = playersObj[i]?.player;
-        console.log("playerArr:", playerArr);
         
         if (!playerArr) continue;
 
