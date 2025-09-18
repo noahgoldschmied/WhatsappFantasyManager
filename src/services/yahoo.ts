@@ -1,3 +1,4 @@
+import { parseStringPromise } from "xml2js";
 // Yahoo Fantasy API client
 
 interface TokenResponse {
@@ -137,6 +138,11 @@ export async function getTeamRoster(teamKey: string, accessToken: string) {
   if (!response.ok) {
     throw new Error(`Failed to get team roster: ${response.status}`);
   }
-
-  return response.json();
+  const jsonResponse = await XMLtoJSON(response);
+  return jsonResponse;
+}
+async function XMLtoJSON(response: Response) {
+  const text = await response.text();
+  const result = await parseStringPromise(text, { explicitArray: false, mergeAttrs: true });
+  return result;
 }
