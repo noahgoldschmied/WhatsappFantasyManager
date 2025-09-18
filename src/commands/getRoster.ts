@@ -1,5 +1,4 @@
 import { getTeamRoster } from "../services/yahoo";
-import { Player } from "../utils/playerParser";
 import { sendWhatsApp } from "../services/twilio";
 
 export async function getRosterCommand({
@@ -21,16 +20,14 @@ export async function getRosterCommand({
 
     try {
       const roster = rosterData.fantasy_content.team.roster
-      console.log("Team data:", JSON.stringify(roster, null, 2));
-      const count = roster.length;
+      const count = roster.players.count || 0;
 
       for (let i = 0; i < count; i++) {
-        const playerArr = roster.player[i];
-
-        if (!playerArr) continue;
-
-      const player_data = new Player(playerArr);
-      players.push(`• ${player_data.name} - ${player_data.position} (${player_data.nflTeam})`);
+        const playerData = roster.players.player[i];
+        const name = playerData.name.full || "Unknown Player";
+        const position = playerData.primary_position || "N/A";
+        const team = playerData.editorial_team__full_name || "Unknown Team";
+        players.push(`• ${name} - ${position} ${team ? `(${team})` : ""}`);
       }
     } catch (e) {
       console.error("Roster parse error:", e);
