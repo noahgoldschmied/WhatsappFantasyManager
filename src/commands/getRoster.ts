@@ -1,5 +1,6 @@
 import { getTeamRoster } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
+import { Player } from "../utils/playerParser";
 
 export async function getRosterCommand({
   from,
@@ -23,15 +24,11 @@ export async function getRosterCommand({
       const count = playersObj.count;
 
       for (let i = 0; i < count; i++) {
-        const p = playersObj[i].player;
+        const playerArr = playersObj[i]?.player;
+        if (!playerArr) continue;
 
-        console.log("DEBUG PLAYER", JSON.stringify(p, null, 2));
-
-        const name = p.find((item: any) => item?.name)?.name?.full || "?";
-        const pos = p.find((item: any) => item?.display_position)?.display_position || "";
-        const nflTeam = p.find((item: any) => item?.editorial_team_abbr)?.editorial_team_abbr || "";
-
-        players.push(`${name} (${pos}${nflTeam ? " - " + nflTeam : ""})`);
+        const player = new Player(playerArr);
+        players.push(player.displayLabel());
       }
     } catch (e) {
       console.error("Roster parse error:", e);
