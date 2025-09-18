@@ -1,6 +1,6 @@
 import { getTeamRoster } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
-import { player } from "../utils/player";
+import { Player } from "../utils/player";
 
 export async function getRosterCommand({
   from,
@@ -31,8 +31,8 @@ export async function getRosterCommand({
         
         if (!playerArr) continue;
 
-        const player_data = new player(playerArr);
-        players.push(player_data.displayLabel());
+  const player_data = new Player(playerArr);
+  players.push(player_data.displayLabel());
       }
     } catch (e) {
       console.error("Roster parse error:", e);
