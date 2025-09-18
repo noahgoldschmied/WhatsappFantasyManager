@@ -25,6 +25,8 @@ export async function getRosterCommand({
       for (let i = 0; i < count; i++) {
         const p = playersObj[i].player;
 
+        console.log("DEBUG PLAYER", JSON.stringify(p, null, 2));
+
         const name = p.find((item: any) => item?.name)?.name?.full || "?";
         const pos = p.find((item: any) => item?.display_position)?.display_position || "";
         const nflTeam = p.find((item: any) => item?.editorial_team_abbr)?.editorial_team_abbr || "";
