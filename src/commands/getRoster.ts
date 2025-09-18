@@ -25,14 +25,14 @@ export async function getRosterCommand({
       const playersObj = roster.players;
       const count = playersObj.count;
 
-      for (let i = 0; i < 1; i++) {
+      for (let i = 0; i < count; i++) {
         const playerArr = playersObj[i]?.player;
         console.log("playerArr:", playerArr);
         
         if (!playerArr) continue;
 
-  const player_data = new Player(playerArr);
-  players.push(player_data.displayLabel());
+      const player_data = new Player(playerArr);
+      players.push(`• ${player_data.name} - ${player_data.position} (${player_data.nflTeam})`);
       }
     } catch (e) {
       console.error("Roster parse error:", e);
