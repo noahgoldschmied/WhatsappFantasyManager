@@ -20,7 +20,7 @@ export async function getRosterCommand({
     let players: string[] = [];
 
     try {
-      const team = rosterData[0].roster;
+      const team = rosterData
       console.log("Team data:", JSON.stringify(team, null, 2));
       const roster = team.roster;
       const playersObj = roster.players;
