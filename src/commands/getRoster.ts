@@ -20,9 +20,9 @@ export async function getRosterCommand({
     let players: string[] = [];
 
     try {
-      const team = rosterData.fantasy_content.team;
-      console.log("team data:", team);
-      const roster = team[1].roster[0];
+      const team = rosterData[0].roster[0];
+      console.log("Team data:", JSON.stringify(team, null, 2));
+      const roster = team.roster;
       const playersObj = roster.players;
       const count = playersObj.count;
 
