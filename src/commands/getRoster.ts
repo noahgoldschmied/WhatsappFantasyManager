@@ -25,10 +25,10 @@ export async function getRosterCommand({
       const playersObj = roster.players;
       const count = playersObj.count;
 
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < 1; i++) {
         const playerArr = playersObj[i]?.player;
         console.log("playerArr:", playerArr);
-        continue;
+        
         if (!playerArr) continue;
 
         const player = new Player(playerArr);
