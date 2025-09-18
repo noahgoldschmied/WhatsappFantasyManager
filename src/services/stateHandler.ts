@@ -37,7 +37,16 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       break;
     case "getRoster":
       if (state.step === "awaitingTeam") {
-        // Wait for user reply, don't clear state
+        // Send menu if this is the first prompt (no number reply yet)
+        if (!/^[0-9]+$/.test(body.trim())) {
+          let msg = 'Which team? Reply with the number:\n';
+          state.teamNames.forEach((name: string, idx: number) => {
+            msg += `${idx + 1}. ${name}\n`;
+          });
+          await sendWhatsApp(from, msg);
+          break;
+        }
+        // Handle user reply with a number
         let num = parseInt(body, 10);
         if (!isNaN(num) && state.teamNames && num >= 1 && num <= state.teamNames.length) {
           const teamsDict = userData?.userTeams;
