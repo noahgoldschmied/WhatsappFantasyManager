@@ -53,13 +53,13 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           const teamName = state.teamNames[num - 1];
           const teamKey = teamsDict ? teamsDict[teamName] : undefined;
           clearConversationState(from);
-          await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey });
+          await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey, teamName });
         } else {
           await sendWhatsApp(from, "Invalid selection. Please reply with a valid number.");
         }
         break;
       } else if (state.step === "shown") {
-        await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey: state.teamKey });
+        await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey: state.teamKey, teamName: state.teamName });
         clearConversationState(from);
         break;
       } else if (state.step === "noTeams") {

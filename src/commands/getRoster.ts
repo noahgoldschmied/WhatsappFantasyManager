@@ -1,15 +1,17 @@
 import { getTeamRoster } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
-import { Player } from "../utils/playerParser";
+import { Player } from "../utils/player";
 
 export async function getRosterCommand({
   from,
   accessToken,
   teamKey,
+  teamName,
 }: {
   from: string;
   accessToken: string;
   teamKey: string;
+  teamName: string;
 }) {
   console.log(`[getRosterCommand] from=${from} teamKey=${teamKey}`);
 
@@ -25,6 +27,7 @@ export async function getRosterCommand({
 
       for (let i = 0; i < count; i++) {
         const playerArr = playersObj[i]?.player;
+        console.log("playerArr:", playerArr);
         if (!playerArr) continue;
 
         const player = new Player(playerArr);
@@ -38,7 +41,7 @@ export async function getRosterCommand({
       ];
     }
 
-    let msg = `📋 *Roster for team:* ${teamKey}\n\n`;
+    let msg = `📋 *Roster for team:* ${teamName}\n\n`;
     msg += players.length ? players.join("\n") : "No players found.";
     await sendWhatsApp(from, msg);
   } catch (error) {
