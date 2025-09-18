@@ -1,6 +1,6 @@
 import { getTeamRoster } from "../services/yahoo";
-import { sendWhatsApp } from "../services/twilio";
 import { Player } from "../utils/player";
+import { sendWhatsApp } from "../services/twilio";
 
 export async function getRosterCommand({
   from,
