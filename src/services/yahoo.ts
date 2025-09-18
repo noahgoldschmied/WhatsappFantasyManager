@@ -128,7 +128,7 @@ export async function getTeamInfo(teamKey: string, accessToken: string) {
 
 // Get team roster
 export async function getTeamRoster(teamKey: string, accessToken: string) {
-  const response = await fetch(`https://fantasysports.yahooapis.com/fantasy/v2/team/${teamKey}/roster/players?format=json`, {
+  const response = await fetch(`https://fantasysports.yahooapis.com/fantasy/v2/team/${teamKey}/roster/players`, {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
     },
