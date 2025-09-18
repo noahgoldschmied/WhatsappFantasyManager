@@ -28,6 +28,7 @@ export async function getRosterCommand({
       for (let i = 0; i < count; i++) {
         const playerArr = playersObj[i]?.player;
         console.log("playerArr:", playerArr);
+        continue;
         if (!playerArr) continue;
 
         const player = new Player(playerArr);
