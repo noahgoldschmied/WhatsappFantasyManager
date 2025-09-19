@@ -33,10 +33,13 @@ export async function getLeagueStandingsCommand({ from, accessToken, leagueKey }
         continue;
       }
       const name = team.name || "Unknown";
-      const points = team.team_points?.total || "-";
       const rank = team.team_standings?.rank || "-";
+      const wins = team.team_standings?.outcome_total?.wins || "-";
+      const losses = team.team_standings?.outcome_total?.losses || "-";
+      const ties = team.team_standings?.outcome_total?.ties || "0";
+      const record = `${wins}-${losses}` + (ties !== "0" ? `-${ties}` : "");
       console.log("Team data:", team);
-      standingsText += `Team: ${name}, Points: ${points}, Place: ${rank}\n`;
+      standingsText += `Team: ${name}, Record: ${record}, Place: ${rank}\n`;
     }
 
     await sendWhatsApp(from, `🏆 Here are your league standings:\n${standingsText}`);
