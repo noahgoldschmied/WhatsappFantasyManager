@@ -1,7 +1,7 @@
 // Message handler: assigns/updates state based on user input
 // State handler: processes logic based on current state
 import { getConversationState, setConversationState, clearConversationState } from "../utils/conversationState";
-import { stateHandler } from "../services/stateHandler";
+import { stateHandler } from "../utils/stateHandler";
 import { getUserChosenTeam, getUserToken, isTokenExpired } from "../services/userStorage";
 import { refreshAccessToken } from "../services/yahoo";
 
