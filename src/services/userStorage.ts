@@ -103,7 +103,6 @@ export function getUserChosenLeague(phoneNumber: string): string {
 }
 
 function getLeagueKeyFromTeamKey(teamKey: string): string {
-  // For keys like '423.l.12345.t.7', return only '.l.12345'
-  const match = teamKey.match(/\.l\.\d+/);
-  return match ? match[0] : '';
+  // For keys like '423.l.12345.t.7'
+  return teamKey.split('.t.')[0];
 }
