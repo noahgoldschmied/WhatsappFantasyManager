@@ -143,6 +143,7 @@ export async function getTeamRoster(teamKey: string, accessToken: string) {
 }
 
 export async function getLeagueStandings(accessToken: string, leagueKey: string) {
+  console.log("Fetching standings for leagueKey:", leagueKey);
   const response = await fetch(`https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/standings`, {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
