@@ -88,7 +88,7 @@ export function setUserChosenTeam(phoneNumber: string, teamKey: string) {
   const user = users.get(phoneNumber);
   if (user) {
     user.userChosenTeam = teamKey;
-    const leagueKey = getLeagueKeyFromTeamKey(teamKey);
+    user.userChosenLeague = getLeagueKeyFromTeamKey(teamKey);
   }
 }
 
