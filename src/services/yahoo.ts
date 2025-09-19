@@ -212,6 +212,9 @@ export async function modifyLineup(params: {
     <players>${movesXml}</players>
   </roster>`;
 
+  // Log the XML payload for debugging
+  console.log("[modifyLineup] XML payload:", xmlBody);
+
   const response = await fetch(
     `https://fantasysports.yahooapis.com/fantasy/v2/team/${teamKey}/roster`,
     {
