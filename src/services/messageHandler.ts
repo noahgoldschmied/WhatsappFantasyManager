@@ -2,7 +2,7 @@
 // State handler: processes logic based on current state
 import { getConversationState, setConversationState, clearConversationState } from "./conversationState";
 import { stateHandler } from "./stateHandler";
-import { getUserToken, isTokenExpired } from "./userStorage";
+import { getUserChosenTeam, getUserToken, isTokenExpired } from "./userStorage";
 import { refreshAccessToken } from "./yahoo";
 
 export async function conversationRouter({ from, body, originalBody }: { from: string, body: string, originalBody: string }) {
@@ -32,6 +32,12 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       }
     } else if (lowerBody === "show teams") {
       setConversationState(from, { type: "showTeams", step: "shown" });
+    } else if (lowerBody === "choose team") {
+      if (!userData.userTeams || Object.keys(userData.userTeams).length === 0) {
+        setConversationState(from, { type: "chooseTeam", step: "noTeams" });
+      } else {
+        setConversationState(from, { type: "chooseTeam", step: "shown"})
+      } 
     } else if (lowerBody.startsWith("get roster")) {
       const parts = body.split(/\s+/);
       if (parts.length < 3) {
@@ -40,12 +46,12 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
         if (!teamsDict || teamNames.length === 0) {
           setConversationState(from, { type: "getRoster", step: "noTeams" });
         } else {
-          setConversationState(from, { type: "getRoster", step: "awaitingTeam", teamNames });
-        }
-      } else {
-        let teamInput = parts.slice(2).join(" ").trim();
-        teamInput = teamInput.replace(/^"|"$/g, '').trim();
-        setConversationState(from, { type: "getRoster", step: "shown", teamKey: teamInput });
+          if (getUserChosenTeam != null) {
+            setConversationState(from, { type: "getRoster", step: "shown", teamKey: getUserChosenTeam });
+          } else {
+            setConversationState(from, { type: "getRoster", step: "awaitingTeam", teamNames });
+          }
+        };
       }
     } else if (lowerBody.startsWith("drop ")) {
       const player = originalBody.slice(5).trim();

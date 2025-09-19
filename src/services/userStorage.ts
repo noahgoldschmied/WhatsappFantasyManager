@@ -8,6 +8,7 @@ interface UserData {
   expiresAt: Date;
   yahooUserId?: string;
   userTeams?: Record<string, string>; // teamName -> teamKey
+  userChosenTeam?: string
 }
 // Set the user's teams dictionary (teamName -> teamKey)
 export function setUserTeams(phoneNumber: string, teams: Record<string, string>) {
@@ -80,4 +81,16 @@ export function getPhoneNumberFromLinkCode(code: string): string | undefined {
     linkCodes.delete(code); // One-time use
   }
   return phoneNumber;
+}
+
+export function setUserChosenTeam(phoneNumber: string, teamKey: string) {
+  const user = users.get(phoneNumber);
+  if (user) {
+    user.userChosenTeam = teamKey;
+  }
+}
+
+export function getUserChosenTeam(phoneNumber: string): string {
+  const user = users.get(phoneNumber);
+  return user?.userChosenTeam ?? "";
 }

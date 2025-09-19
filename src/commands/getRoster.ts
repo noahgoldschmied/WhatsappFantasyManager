@@ -1,18 +1,21 @@
 import { getTeamRoster } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
+import { getUserTeamsDict } from "../services/userStorage";
 
 export async function getRosterCommand({
   from,
   accessToken,
-  teamKey,
-  teamName,
+  teamKey
 }: {
   from: string;
   accessToken: string;
   teamKey: string;
-  teamName: string;
 }) {
   console.log(`[getRosterCommand] from=${from} teamKey=${teamKey}`);
+
+  const userTeams = getUserTeamsDict(from);
+  const teamName = userTeams ? getKeyByValue(userTeams, teamKey) : undefined;
+
 
   try {
     const rosterData = await getTeamRoster(teamKey, accessToken);
@@ -37,7 +40,7 @@ export async function getRosterCommand({
       ];
     }
 
-    let msg = `📋 *Roster for team:* ${teamName}\n\n`;
+    let msg = `📋 *Roster for team:* ${teamName ?? "Unknown"}\n\n`;
     msg += players.length ? players.join("\n") : "No players found.";
     await sendWhatsApp(from, msg);
   } catch (error) {
@@ -47,4 +50,8 @@ export async function getRosterCommand({
       "❌ Failed to get roster. Make sure your team key is correct. Use 'show teams' to see your team keys."
     );
   }
+}
+
+function getKeyByValue(dict: Record<string, string>, value: string): string | undefined {
+  return Object.keys(dict).find(key => dict[key] === value);
 }

@@ -11,6 +11,7 @@ import { confirmDropCommand } from "../commands/confirmDrop";
 import { defaultResponseCommand } from "../commands/defaultResponse";
 
 import { sendWhatsApp } from "./twilio";
+import { chooseTeamCommand } from "../commands/chooseTeam";
 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
   if (!state) return;
@@ -34,6 +35,15 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "showTeams":
       await showTeamsCommand({ from, accessToken: userData?.accessToken });
       clearConversationState(from);
+      break;
+    case "chooseTeam":
+      if (state.step === "noTeams") {
+        await showTeamsCommand({ from, accessToken: userData?.accessToken });
+      } else if (state.step === "shown"){
+        await chooseTeamCommand({ from });
+      } else {
+        await chooseTeamCommand({ from, reply: body });
+      }
       break;
     case "getRoster":
       if (state.step === "awaitingTeam") {
