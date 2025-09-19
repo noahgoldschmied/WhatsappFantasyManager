@@ -94,19 +94,6 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       break;
     case "modifyLineup":
       if (state.step === "awaitingPlayerMove") {
-        // Ensure user has selected a team and league before proceeding
-        const teamKey = getUserChosenTeam(from);
-        const leagueKey = getUserChosenLeague(from);
-        if (!teamKey) {
-          await sendWhatsApp(from, "❌ No team selected. Please choose a team first.");
-          clearConversationState(from);
-          break;
-        }
-        if (!leagueKey) {
-          await sendWhatsApp(from, "❌ No league selected. Please choose a league first.");
-          clearConversationState(from);
-          break;
-        }
         await modifyLineupCommand({ from, body, userData });
         clearConversationState(from);
       }
