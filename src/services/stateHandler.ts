@@ -42,7 +42,8 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "chooseTeam":
       if (state.step === "noTeams") {
         await showTeamsCommand({ from, accessToken: userData?.accessToken });
-        setConversationState(from, { type: "chooseTeam", step: "shown"})
+        await chooseTeamCommand({ from });
+        setConversationState(from, { type: "chooseTeam"})
       } else if (state.step === "shown"){
         await chooseTeamCommand({ from });
       } else {

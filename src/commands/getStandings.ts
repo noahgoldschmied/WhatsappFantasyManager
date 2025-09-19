@@ -25,6 +25,7 @@ export async function getLeagueStandingsCommand({ from, accessToken, leagueKey }
 
     for (let i = 0; i < count; i++) {
       const team = teams[i];
+      console.log("Team data:", team);
       standings += `Team: ${team.name}, Points: ${team.team_points.total}, Place: ${team.team_standings.rank}\n`;
     }
 
