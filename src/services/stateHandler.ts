@@ -60,6 +60,7 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       }
       break;
     case "getStandings":
+      console.log("user league", getUserChosenLeague(from))
       if (getUserChosenLeague(from) === "") {
         await chooseTeamCommand({ from });
         setConversationState(from, { type: "getStandings" });
