@@ -19,24 +19,22 @@ export async function getLeagueStandingsCommand({ from, accessToken, leagueKey }
     const league = info?.fantasy_content?.league;
     const standings = league?.standings;
     const teams = standings?.teams;
-    if (!teams || (!Array.isArray(teams) && typeof teams !== 'object')) {
+    if (!teams || !teams.team) {
       await sendWhatsApp(from, "❌ No teams found in league standings.");
       return;
     }
 
     let standingsText = "";
-    const count = parseInt(teams.count) || 0;
-
-    // Yahoo API sometimes returns teams as an object with numeric keys
-    for (let i = 0; i < count; i++) {
-      const team = Array.isArray(teams) ? teams[i] : teams[i];
+    const teamArray = Array.isArray(teams.team) ? teams.team : [teams.team];
+    for (let i = 0; i < teamArray.length; i++) {
+      const team = teamArray[i];
       if (!team) {
         console.log(`Team at index ${i} is undefined!`, team);
         continue;
       }
-      const name = team?.name || team?.team?.name || "Unknown";
-      const points = team?.team_points?.total || team?.team?.team_points?.total || "-";
-      const rank = team?.team_standings?.rank || team?.team?.team_standings?.rank || "-";
+      const name = team.name || "Unknown";
+      const points = team.team_points?.total || "-";
+      const rank = team.team_standings?.rank || "-";
       console.log("Team data:", team);
       standingsText += `Team: ${name}, Points: ${points}, Place: ${rank}\n`;
     }
