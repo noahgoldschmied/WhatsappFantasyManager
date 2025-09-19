@@ -1,5 +1,5 @@
 // State handler: executes logic based on current state
-import { clearConversationState } from "./conversationState";
+import { clearConversationState, setConversationState } from "./conversationState";
 import { getRosterCommand } from "../commands/getRoster";
 import { showTeamsCommand } from "../commands/showTeams";
 import { helpCommand } from "../commands/help";
@@ -41,6 +41,7 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "chooseTeam":
       if (state.step === "noTeams") {
         await showTeamsCommand({ from, accessToken: userData?.accessToken });
+        setConversationState(from, { type: "chooseTeam", step: "shown"})
       } else if (state.step === "shown"){
         await chooseTeamCommand({ from });
       } else {
@@ -50,6 +51,7 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "getRoster":
       if (getUserChosenTeam(from) === "") {
         await chooseTeamCommand({ from });
+        setConversationState(from, { type: "getRoster" });
       } else {
         const userTeamKey = getUserChosenTeam(from)
         await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey: userTeamKey})
