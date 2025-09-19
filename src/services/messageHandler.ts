@@ -38,21 +38,8 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       } else {
         setConversationState(from, { type: "chooseTeam", step: "shown"})
       } 
-    } else if (lowerBody.startsWith("get roster")) {
-      const parts = body.split(/\s+/);
-      if (parts.length < 3) {
-        const teamsDict = userData.userTeams;
-        const teamNames = teamsDict ? Object.keys(teamsDict) : [];
-        if (!teamsDict || teamNames.length === 0) {
-          setConversationState(from, { type: "getRoster", step: "noTeams" });
-        } else {
-          if (getUserChosenTeam != null) {
-            setConversationState(from, { type: "getRoster", step: "shown", teamKey: getUserChosenTeam });
-          } else {
-            setConversationState(from, { type: "getRoster", step: "awaitingTeam", teamNames });
-          }
-        };
-      }
+    } else if (lowerBody === "get roster") {
+      setConversationState(from, { type: "getRoster" });
     } else if (lowerBody.startsWith("drop ")) {
       const player = originalBody.slice(5).trim();
       setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", player });

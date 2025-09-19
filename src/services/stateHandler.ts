@@ -12,6 +12,8 @@ import { defaultResponseCommand } from "../commands/defaultResponse";
 
 import { sendWhatsApp } from "./twilio";
 import { chooseTeamCommand } from "../commands/chooseTeam";
+import { get } from "http";
+import { getUserChosenTeam } from "./userStorage";
 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
   if (!state) return;
@@ -46,36 +48,12 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       }
       break;
     case "getRoster":
-      if (state.step === "awaitingTeam") {
-        // Send menu if this is the first prompt (no number reply yet)
-        if (!/^[0-9]+$/.test(body.trim())) {
-          let msg = 'Which team? Reply with the number:\n';
-          state.teamNames.forEach((name: string, idx: number) => {
-            msg += `${idx + 1}. ${name}\n`;
-          });
-          await sendWhatsApp(from, msg);
-          break;
-        }
-        // Handle user reply with a number
-        let num = parseInt(body, 10);
-        if (!isNaN(num) && state.teamNames && num >= 1 && num <= state.teamNames.length) {
-          const teamsDict = userData?.userTeams;
-          const teamName = state.teamNames[num - 1];
-          const teamKey = teamsDict ? teamsDict[teamName] : undefined;
-          clearConversationState(from);
-          await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey, teamName });
-        } else {
-          await sendWhatsApp(from, "Invalid selection. Please reply with a valid number.");
-        }
-        break;
-      } else if (state.step === "shown") {
-        await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey: state.teamKey, teamName: state.teamName });
-        clearConversationState(from);
-        break;
-      } else if (state.step === "noTeams") {
-        await sendWhatsApp(from, "No teams found. Please use 'show teams' first.");
-        clearConversationState(from);
-        break;
+      if (getUserChosenTeam(from) === "") {
+        await chooseTeamCommand({ from });
+      } else {
+        const userTeamKey = getUserChosenTeam(from)
+        await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey: userTeamKey})
+        clearConversationState(from)
       }
       break;
     case "dropPlayer":
