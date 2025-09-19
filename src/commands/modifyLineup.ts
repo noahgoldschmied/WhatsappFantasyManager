@@ -25,17 +25,18 @@ export async function modifyLineupCommand({ from, body, userData }: {
     await sendWhatsApp(from, "❌ No league selected. Please choose a league first.");
     return false;
   }
-  // Parse command: "start Patrick Mahomes at QB" or "bench Ezekiel Elliott"
-  const match = body.match(/^(start|bench)\s+([\w\s'.-]+)(?:\s+at\s+(\w+))?/i);
+  // Parse command: "start Patrick Mahomes at QB week 3" or "bench Ezekiel Elliott week 3"
+  const match = body.match(/^(start|bench)\s+([\w\s'.-]+?)(?:\s+at\s+(\w+))?\s+week\s+(\d+)/i);
   if (!match) {
-    await sendWhatsApp(from, "Please specify your move, e.g. 'start Patrick Mahomes at QB' or 'bench Ezekiel Elliott'.");
+    await sendWhatsApp(from, "Please specify your move, e.g. 'start Patrick Mahomes at QB week 3' or 'bench Ezekiel Elliott week 3'.");
     return false;
   }
   const action = match[1].toLowerCase();
   const playerName = match[2].trim();
   const position = match[3] ? match[3].trim().toUpperCase() : undefined;
+  const week = match[4];
   if (!position && action === "start") {
-    await sendWhatsApp(from, "Please specify a position, e.g. 'start Patrick Mahomes at QB'.");
+    await sendWhatsApp(from, "Please specify a position, e.g. 'start Patrick Mahomes at QB week 3'.");
     return false;
   }
   if (action !== "start" && action !== "bench") {
@@ -54,8 +55,8 @@ export async function modifyLineupCommand({ from, body, userData }: {
     position: action === "start" ? (position as string) : "BN",
   }];
   try {
-    await modifyLineup({ accessToken, teamKey, playerMoves });
-    await sendWhatsApp(from, `✅ ${action === "start" ? "Started" : "Benched"} ${playerName} at ${playerMoves[0].position}`);
+    await modifyLineup({ accessToken, teamKey, playerMoves, week });
+    await sendWhatsApp(from, `✅ ${action === "start" ? "Started" : "Benched"} ${playerName} at ${playerMoves[0].position} for week ${week}`);
     return true;
   } catch (error) {
     console.error("[modifyLineupCommand] Error:", error);

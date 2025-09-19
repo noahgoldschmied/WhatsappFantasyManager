@@ -198,19 +198,14 @@ export async function modifyLineup(params: {
     position: string;
     isStarting?: boolean;
   }>;
+  week: string;
 }): Promise<boolean> {
-  const { accessToken, teamKey, playerMoves } = params;
-  // Build XML body for Yahoo's API
-  const movesXml = playerMoves.map(move => `
-    <player>
-      <player_key>${move.playerKey}</player_key>
-      <position>${move.position}</position>
-    </player>`).join("");
-  const xmlBody = `<?xml version="1.0" encoding="UTF-8"?>
-  <roster>
-    <coverage_type>date</coverage_type>
-    <players>${movesXml}</players>
-  </roster>`;
+  const { accessToken, teamKey, playerMoves, week } = params;
+  // Build XML body for Yahoo's API (with fantasy_content root, week, and coverage_type)
+  const movesXml = playerMoves.map(move =>
+    `<player><player_key>${move.playerKey}</player_key><position>${move.position}</position></player>`
+  ).join("");
+  const xmlBody = `<?xml version="1.0" encoding="UTF-8"?><fantasy_content><roster><coverage_type>week</coverage_type><week>${week}</week><players>${movesXml}</players></roster></fantasy_content>`;
 
   // Log the XML payload for debugging
   console.log("[modifyLineup] XML payload:", xmlBody);
