@@ -94,8 +94,18 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       break;
     case "modifyLineup":
       if (state.step === "awaitingPlayerMove") {
-        await modifyLineupCommand({ from, body, userData });
-        clearConversationState(from);
+        const lowerBody = body.trim().toLowerCase();
+        if (lowerBody === "done" || lowerBody === "cancel") {
+          await sendWhatsApp(from, lowerBody === "done" ? "✅ Lineup modification complete." : "❌ Lineup modification cancelled.");
+          clearConversationState(from);
+        } else {
+          const result = await modifyLineupCommand({ from, body, userData });
+          // If the command succeeded (returns true), prompt for more moves
+          if (result === true) {
+            await sendWhatsApp(from, "Would you like to make another move? Reply with another command, or send 'done' if finished.");
+          }
+          // Stay in modifyLineup state for further changes
+        }
       }
       break;
     default:

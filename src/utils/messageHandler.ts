@@ -51,6 +51,9 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       setConversationState(from, { type: "getStandings" });
     } else if (lowerBody === "modify lineup") {
       setConversationState(from, { type: "modifyLineup", step: "awaitingPlayerMove" });
+    } else if (state && state.type === "modifyLineup" && state.step === "awaitingPlayerMove") {
+      // If already in modifyLineup flow, keep state so follow-up like 'bench Nico Collins' is handled
+      setConversationState(from, { type: "modifyLineup", step: "awaitingPlayerMove" });
     } else if (lowerBody.startsWith("drop ")) {
       const player = originalBody.slice(5).trim();
       setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", player });

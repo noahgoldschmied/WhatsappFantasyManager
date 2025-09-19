@@ -15,38 +15,38 @@ export async function modifyLineupCommand({ from, body, userData }: {
   const leagueKey = getUserChosenLeague(from);
   if (!accessToken) {
     await sendWhatsApp(from, "❌ Access token is missing.");
-    return;
+    return false;
   }
   if (!teamKey) {
     await sendWhatsApp(from, "❌ No team selected. Please choose a team first.");
-    return;
+    return false;
   }
   if (!leagueKey) {
     await sendWhatsApp(from, "❌ No league selected. Please choose a league first.");
-    return;
+    return false;
   }
   // Parse command: "start Patrick Mahomes at QB" or "bench Ezekiel Elliott"
   const match = body.match(/^(start|bench)\s+([\w\s'.-]+)(?:\s+at\s+(\w+))?/i);
   if (!match) {
     await sendWhatsApp(from, "Please specify your move, e.g. 'start Patrick Mahomes at QB' or 'bench Ezekiel Elliott'.");
-    return;
+    return false;
   }
   const action = match[1].toLowerCase();
   const playerName = match[2].trim();
   const position = match[3] ? match[3].trim().toUpperCase() : undefined;
   if (!position && action === "start") {
     await sendWhatsApp(from, "Please specify a position, e.g. 'start Patrick Mahomes at QB'.");
-    return;
+    return false;
   }
   if (action !== "start" && action !== "bench") {
     await sendWhatsApp(from, "Only 'start' or 'bench' actions are supported.");
-    return;
+    return false;
   }
   // Look up player key
   const player = await getPlayerInfoByName({ accessToken, leagueKey, playerName });
   if (!player || !player.player_key) {
     await sendWhatsApp(from, `❌ Could not find player key for ${playerName}`);
-    return;
+    return false;
   }
   // Build playerMoves for modifyLineup
   const playerMoves = [{
@@ -56,8 +56,10 @@ export async function modifyLineupCommand({ from, body, userData }: {
   try {
     await modifyLineup({ accessToken, teamKey, playerMoves });
     await sendWhatsApp(from, `✅ ${action === "start" ? "Started" : "Benched"} ${playerName} at ${playerMoves[0].position}`);
+    return true;
   } catch (error) {
     console.error("[modifyLineupCommand] Error:", error);
     await sendWhatsApp(from, "❌ Failed to update lineup.");
+    return false;
   }
 }
