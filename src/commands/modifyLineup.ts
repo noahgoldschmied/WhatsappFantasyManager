@@ -33,7 +33,11 @@ export async function modifyLineupCommand({ from, body, userData }: {
   }
   const action = match[1].toLowerCase();
   const playerName = match[2].trim();
-  const position = match[3] ? match[3].trim().toUpperCase() : undefined;
+  let position = match[3] ? match[3].trim().toUpperCase() : undefined;
+  // Map 'flex' (case-insensitive) to Yahoo's 'W/R/T' code
+  if (position && position.replace(/[^A-Z]/gi, '').toUpperCase() === 'FLEX') {
+    position = 'W/R/T';
+  }
   const week = match[4];
   if (!position && action === "start") {
     await sendWhatsApp(from, "Please specify a position, e.g. 'start Patrick Mahomes at QB week 3'.");
