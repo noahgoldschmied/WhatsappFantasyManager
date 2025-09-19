@@ -163,3 +163,72 @@ async function XMLtoJSON(response: Response) {
   const result = await parseStringPromise(text, { explicitArray: false, mergeAttrs: true });
   return result;
 }
+
+// Search for a player by name in a league and return player info (including player_key)
+export async function getPlayerByName({ accessToken, leagueKey, playerName }: {
+  accessToken: string;
+  leagueKey: string;
+  playerName: string;
+}) {
+  // Yahoo API: /league/{league_key}/players;search={playerName}
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/players;search=${encodeURIComponent(playerName)}`;
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to search player: ${response.status}`);
+  }
+  const jsonResponse = await XMLtoJSON(response);
+  // Defensive: Yahoo may return a single player or an array
+  const players = jsonResponse?.fantasy_content?.league?.players?.player;
+  if (!players) return null;
+  if (Array.isArray(players)) {
+    return players[0]; // Return first match for now
+  }
+  return players;
+}
+// Modify team lineup (PUT request)
+export async function modifyLineup(params: {
+  accessToken: string;
+  teamKey: string;
+  playerMoves: Array<{
+    playerKey: string;
+    position: string;
+    isStarting?: boolean;
+  }>;
+}): Promise<boolean> {
+  const { accessToken, teamKey, playerMoves } = params;
+  // Build XML body for Yahoo's API
+  const movesXml = playerMoves.map(move => `
+    <player>
+      <player_key>${move.playerKey}</player_key>
+      <position>${move.position}</position>
+    </player>`).join("");
+  const xmlBody = `<?xml version="1.0" encoding="UTF-8"?>
+  <roster>
+    <coverage_type>date</coverage_type>
+    <players>${movesXml}</players>
+  </roster>`;
+
+  const response = await fetch(
+    `https://fantasysports.yahooapis.com/fantasy/v2/team/${teamKey}/roster`,
+    {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/xml",
+      },
+      body: xmlBody,
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to modify lineup: ${response.status} ${error}`);
+  }
+
+  return true;
+}
+// (Removed stray closing brace)

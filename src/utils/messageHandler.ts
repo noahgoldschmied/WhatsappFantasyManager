@@ -1,9 +1,9 @@
 // Message handler: assigns/updates state based on user input
 // State handler: processes logic based on current state
-import { getConversationState, setConversationState, clearConversationState } from "./conversationState";
-import { stateHandler } from "./stateHandler";
-import { getUserChosenTeam, getUserToken, isTokenExpired } from "./userStorage";
-import { refreshAccessToken } from "./yahoo";
+import { getConversationState, setConversationState, clearConversationState } from "../utils/conversationState";
+import { stateHandler } from "../services/stateHandler";
+import { getUserChosenTeam, getUserToken, isTokenExpired } from "../services/userStorage";
+import { refreshAccessToken } from "../services/yahoo";
 
 export async function conversationRouter({ from, body, originalBody }: { from: string, body: string, originalBody: string }) {
   const lowerBody = body.toLowerCase();
@@ -11,7 +11,14 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
   let state = getConversationState(from);
   console.log(`[messageHandler] from=${from} state=`, state);
 
-  // 1. Message handler: assign/update state based on input
+    // 0. If user says 'restart', clear state and return immediately
+    if (body.trim().toLowerCase() === "restart") {
+      clearConversationState(from);
+      await stateHandler({ from, body, originalBody, state: null, userData });
+      return;
+    }
+
+    // 1. Message handler: assign/update state based on input
   if (!state) {
     // help
     if (lowerBody === "help") {
@@ -42,6 +49,8 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       setConversationState(from, { type: "getRoster" });
     } else if (lowerBody === "get standings") {
       setConversationState(from, { type: "getStandings" });
+    } else if (lowerBody === "modify lineup") {
+      setConversationState(from, { type: "modifyLineup", step: "awaitingPlayerMove" });
     } else if (lowerBody.startsWith("drop ")) {
       const player = originalBody.slice(5).trim();
       setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", player });

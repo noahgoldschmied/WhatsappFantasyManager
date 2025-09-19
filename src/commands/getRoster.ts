@@ -28,7 +28,7 @@ export async function getRosterCommand({
       for (let i = 0; i < count; i++) {
         const playerData = roster.players.player[i];
         const name = playerData.name.full || "Unknown Player";
-        const position = playerData.primary_position || "N/A";
+        const position = playerData.display_position || "N/A";
         const team = playerData.editorial_team_full_name || "Unknown Team";
         players.push(`• ${name} - ${position} ${team ? `(${team})` : ""}`);
       }

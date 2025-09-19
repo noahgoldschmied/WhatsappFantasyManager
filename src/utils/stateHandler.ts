@@ -9,12 +9,13 @@ import { tokenExpiredCommand } from "../commands/tokenExpired";
 import { dropPlayerCommand } from "../commands/dropPlayer";
 import { confirmDropCommand } from "../commands/confirmDrop";
 import { defaultResponseCommand } from "../commands/defaultResponse";
+import { modifyLineupCommand } from "../commands/modifyLineup";
 import { getLeagueStandingsCommand } from "../commands/getStandings";
 
-import { sendWhatsApp } from "./twilio";
+import { sendWhatsApp } from "../services/twilio";
 import { chooseTeamCommand } from "../commands/chooseTeam";
 import { get } from "http";
-import { getUserChosenTeam, getUserChosenLeague } from "./userStorage";
+import { getUserChosenTeam, getUserChosenLeague } from "../services/userStorage";
 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
   if (!state) return;
@@ -90,6 +91,25 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "defaultResponse":
       await defaultResponseCommand({ from, body });
       clearConversationState(from);
+      break;
+    case "modifyLineup":
+      if (state.step === "awaitingPlayerMove") {
+        // Ensure user has selected a team and league before proceeding
+        const teamKey = getUserChosenTeam(from);
+        const leagueKey = getUserChosenLeague(from);
+        if (!teamKey) {
+          await sendWhatsApp(from, "❌ No team selected. Please choose a team first.");
+          clearConversationState(from);
+          break;
+        }
+        if (!leagueKey) {
+          await sendWhatsApp(from, "❌ No league selected. Please choose a league first.");
+          clearConversationState(from);
+          break;
+        }
+        await modifyLineupCommand({ from, body, userData });
+        clearConversationState(from);
+      }
       break;
     default:
       await sendWhatsApp(from, "❓ I didn't understand that. Send 'help' to see available commands.");

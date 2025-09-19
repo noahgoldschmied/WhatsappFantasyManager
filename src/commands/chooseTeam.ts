@@ -1,6 +1,6 @@
 import { getUserTeamsDict, setUserChosenTeam } from "../services/userStorage";
 import { sendWhatsApp } from "../services/twilio";
-import { setConversationState, clearConversationState } from "../services/conversationState";
+import { setConversationState, clearConversationState } from "../utils/conversationState";
 
 
 export async function chooseTeamCommand({ from, reply }: { from: string, reply?: string }) {
