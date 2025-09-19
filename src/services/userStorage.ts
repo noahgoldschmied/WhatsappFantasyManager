@@ -8,7 +8,8 @@ interface UserData {
   expiresAt: Date;
   yahooUserId?: string;
   userTeams?: Record<string, string>; // teamName -> teamKey
-  userChosenTeam?: string
+  userChosenTeam?: string;
+  userChosenLeague?: string;
 }
 // Set the user's teams dictionary (teamName -> teamKey)
 export function setUserTeams(phoneNumber: string, teams: Record<string, string>) {
@@ -87,10 +88,21 @@ export function setUserChosenTeam(phoneNumber: string, teamKey: string) {
   const user = users.get(phoneNumber);
   if (user) {
     user.userChosenTeam = teamKey;
+    const leagueKey = getLeagueKeyFromTeamKey(teamKey);
   }
 }
 
 export function getUserChosenTeam(phoneNumber: string): string {
   const user = users.get(phoneNumber);
   return user?.userChosenTeam ?? "";
+}
+
+export function getUserChosenLeague(phoneNumber: string): string {
+  const user = users.get(phoneNumber);
+  return user?.userChosenLeague ?? "";
+}
+
+function getLeagueKeyFromTeamKey(teamKey: string): string {
+  // For keys like '423.l.12345.t.7'
+  return teamKey.split('.t.')[0];
 }

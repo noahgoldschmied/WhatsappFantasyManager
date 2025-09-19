@@ -9,11 +9,12 @@ import { tokenExpiredCommand } from "../commands/tokenExpired";
 import { dropPlayerCommand } from "../commands/dropPlayer";
 import { confirmDropCommand } from "../commands/confirmDrop";
 import { defaultResponseCommand } from "../commands/defaultResponse";
+import { getLeagueStandingsCommand } from "../commands/getStandings";
 
 import { sendWhatsApp } from "./twilio";
 import { chooseTeamCommand } from "../commands/chooseTeam";
 import { get } from "http";
-import { getUserChosenTeam } from "./userStorage";
+import { getUserChosenTeam, getUserChosenLeague } from "./userStorage";
 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
   if (!state) return;
@@ -58,6 +59,16 @@ export async function stateHandler({ from, body, originalBody, state, userData }
         clearConversationState(from)
       }
       break;
+    case "getStandings":
+      if (getUserChosenLeague(from) === "") {
+        await chooseTeamCommand({ from });
+        setConversationState(from, { type: "getStandings" });
+      } else {
+        const userLeagueKey = getUserChosenLeague(from)
+        await getLeagueStandingsCommand({ from, accessToken: userData?.accessToken, leagueKey: userLeagueKey})
+        clearConversationState(from)
+      }
+      break;  
     case "dropPlayer":
       if (state.step === "awaitingConfirmation") {
         if (body.trim().toLowerCase() === "yes") {

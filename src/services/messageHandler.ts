@@ -40,6 +40,8 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       } 
     } else if (lowerBody === "get roster") {
       setConversationState(from, { type: "getRoster" });
+    } else if (lowerBody === "get standings") {
+      setConversationState(from, { type: "getStandings" });
     } else if (lowerBody.startsWith("drop ")) {
       const player = originalBody.slice(5).trim();
       setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", player });

@@ -141,6 +141,22 @@ export async function getTeamRoster(teamKey: string, accessToken: string) {
   const jsonResponse = await XMLtoJSON(response);
   return jsonResponse;
 }
+
+export async function getLeagueStandings(leagueKey: string, accessToken: string) {
+  const response = await fetch(`https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/standings`, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get league standings: ${response.status}`);
+  }
+
+  const jsonResponse = await XMLtoJSON(response);
+  return jsonResponse;
+}
+
 async function XMLtoJSON(response: Response) {
   const text = await response.text();
   const result = await parseStringPromise(text, { explicitArray: false, mergeAttrs: true });
