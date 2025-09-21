@@ -54,11 +54,34 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
     } else if (state && state.type === "modifyLineup" && state.step === "awaitingPlayerMove") {
       // If already in modifyLineup flow, keep state so follow-up like 'bench Nico Collins' is handled
       setConversationState(from, { type: "modifyLineup", step: "awaitingPlayerMove" });
-    } else if (lowerBody.startsWith("drop ")) {
-      const player = originalBody.slice(5).trim();
-      setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", player });
+    } else if (/^add [\w\s'.-]+ drop [\w\s'.-]+$/i.test(body)) {
+      // e.g. 'add Nico Collins drop Mike Evans'
+      const match = body.match(/^add ([\w\s'.-]+) drop ([\w\s'.-]+)$/i);
+      if (match) {
+        const addPlayer = match[1].trim();
+        const dropPlayer = match[2].trim();
+        setConversationState(from, { type: "addDropPlayer", step: "awaitingConfirmation", addPlayer, dropPlayer });
+      }
+    } else if (/^add [\w\s'.-]+$/i.test(body)) {
+      // e.g. 'add Nico Collins'
+      const match = body.match(/^add ([\w\s'.-]+)$/i);
+      if (match) {
+        const addPlayer = match[1].trim();
+        setConversationState(from, { type: "addPlayer", step: "awaitingConfirmation", addPlayer });
+      }
+    } else if (/^drop [\w\s'.-]+$/i.test(body)) {
+      // e.g. 'drop Mike Evans'
+      const match = body.match(/^drop ([\w\s'.-]+)$/i);
+      if (match) {
+        const dropPlayer = match[1].trim();
+        setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", dropPlayer });
+      }
+    } else if (lowerBody === "add player") {
+      setConversationState(from, { type: "addPlayer", step: "awaitingName" });
+    } else if (lowerBody === "drop player") {
+      setConversationState(from, { type: "dropPlayer", step: "awaitingName" });
     } else if (lowerBody === "yes") {
-      setConversationState(from, { type: "dropPlayer", step: "noPending" });
+      setConversationState(from, { type: "confirmTransaction", step: "confirmed" });
     } else {
       setConversationState(from, { type: "defaultResponse", step: "shown", body });
     }

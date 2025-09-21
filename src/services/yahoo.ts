@@ -1,3 +1,123 @@
+// Add a player to a team (Yahoo API)
+export async function addPlayerYahoo({ accessToken, leagueKey, teamKey, playerKey }: {
+  accessToken: string;
+  leagueKey: string;
+  teamKey: string;
+  playerKey: string;
+}): Promise<boolean> {
+  const xmlBody = `<?xml version="1.0" encoding="UTF-8"?>
+<fantasy_content>
+  <transaction>
+    <type>add</type>
+    <player>
+      <player_key>${playerKey}</player_key>
+      <transaction_data>
+        <type>add</type>
+        <destination_team_key>${teamKey}</destination_team_key>
+      </transaction_data>
+    </player>
+  </transaction>
+</fantasy_content>`;
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
+  console.log("[addPlayerYahoo] XML payload:", xmlBody);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/xml",
+    },
+    body: xmlBody,
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`[addPlayerYahoo] Failed: ${response.status} ${error}`);
+  }
+  return true;
+}
+
+// Drop a player from a team (Yahoo API)
+export async function dropPlayerYahoo({ accessToken, leagueKey, teamKey, playerKey }: {
+  accessToken: string;
+  leagueKey: string;
+  teamKey: string;
+  playerKey: string;
+}): Promise<boolean> {
+  const xmlBody = `<?xml version="1.0" encoding="UTF-8"?>
+<fantasy_content>
+  <transaction>
+    <type>drop</type>
+    <player>
+      <player_key>${playerKey}</player_key>
+      <transaction_data>
+        <type>drop</type>
+        <source_team_key>${teamKey}</source_team_key>
+      </transaction_data>
+    </player>
+  </transaction>
+</fantasy_content>`;
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
+  console.log("[dropPlayerYahoo] XML payload:", xmlBody);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/xml",
+    },
+    body: xmlBody,
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`[dropPlayerYahoo] Failed: ${response.status} ${error}`);
+  }
+  return true;
+}
+
+// Add and drop in one move (Yahoo API)
+export async function addDropPlayerYahoo({ accessToken, leagueKey, teamKey, addPlayerKey, dropPlayerKey }: {
+  accessToken: string;
+  leagueKey: string;
+  teamKey: string;
+  addPlayerKey: string;
+  dropPlayerKey: string;
+}): Promise<boolean> {
+  const xmlBody = `<?xml version="1.0" encoding="UTF-8"?>
+<fantasy_content>
+  <transaction>
+    <type>add/drop</type>
+    <players>
+      <player>
+        <player_key>${addPlayerKey}</player_key>
+        <transaction_data>
+          <type>add</type>
+          <destination_team_key>${teamKey}</destination_team_key>
+        </transaction_data>
+      </player>
+      <player>
+        <player_key>${dropPlayerKey}</player_key>
+        <transaction_data>
+          <type>drop</type>
+          <source_team_key>${teamKey}</source_team_key>
+        </transaction_data>
+      </player>
+    </players>
+  </transaction>
+</fantasy_content>`;
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
+  console.log("[addDropPlayerYahoo] XML payload:", xmlBody);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/xml",
+    },
+    body: xmlBody,
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`[addDropPlayerYahoo] Failed: ${response.status} ${error}`);
+  }
+  return true;
+}
 import { parseStringPromise } from "xml2js";
 // Yahoo Fantasy API client
 

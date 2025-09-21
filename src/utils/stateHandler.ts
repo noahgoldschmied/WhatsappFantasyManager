@@ -10,12 +10,13 @@ import { dropPlayerCommand } from "../commands/dropPlayer";
 import { confirmDropCommand } from "../commands/confirmDrop";
 import { defaultResponseCommand } from "../commands/defaultResponse";
 import { modifyLineupCommand } from "../commands/modifyLineup";
+import { addPlayer, dropPlayer, addDropPlayer } from "../commands/rosterMoves";
 import { getLeagueStandingsCommand } from "../commands/getStandings";
 
 import { sendWhatsApp } from "../services/twilio";
 import { chooseTeamCommand } from "../commands/chooseTeam";
 import { get } from "http";
-import { getUserChosenTeam, getUserChosenLeague } from "../services/userStorage";
+import { getUserChosenTeam, getUserChosenLeague, getLeagueKeyFromTeamKey } from "../services/userStorage";
 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
   if (!state) return;
@@ -72,20 +73,65 @@ export async function stateHandler({ from, body, originalBody, state, userData }
         clearConversationState(from)
       }
       break;  
-    case "dropPlayer":
-      if (state.step === "awaitingConfirmation") {
+    case "addPlayer":
+      if (state.step === "awaitingName") {
+        await sendWhatsApp(from, "Which player would you like to add? Please reply with the player's name.");
+        setConversationState(from, { type: "addPlayer", step: "awaitingConfirmation", addPlayer: body.trim() });
+      } else if (state.step === "awaitingConfirmation") {
         if (body.trim().toLowerCase() === "yes") {
-          await confirmDropCommand({ from });
+          const teamKey = getUserChosenTeam(from);
+          const leagueKey = getLeagueKeyFromTeamKey(teamKey);
+          await addPlayer({
+            accessToken: userData?.accessToken,
+            leagueKey,
+            teamKey,
+            playerName: state.addPlayer,
+            from
+          });
           clearConversationState(from);
         } else {
-          await sendWhatsApp(from, "❌ Drop cancelled.");
           clearConversationState(from);
         }
-        break;
-      } else if (state.step === "noPending") {
-        await sendWhatsApp(from, "No drop in progress. To drop a player, use 'drop [player name]'.");
-        clearConversationState(from);
-        break;
+      }
+      break;
+    case "dropPlayer":
+      if (state.step === "awaitingName") {
+        await sendWhatsApp(from, "Which player would you like to drop? Please reply with the player's name.");
+        setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", dropPlayer: body.trim() });
+      } else if (state.step === "awaitingConfirmation") {
+        if (body.trim().toLowerCase() === "yes") {
+          const teamKey = getUserChosenTeam(from);
+          const leagueKey = getLeagueKeyFromTeamKey(teamKey);
+          await dropPlayer({
+            accessToken: userData?.accessToken,
+            leagueKey,
+            teamKey,
+            playerName: state.dropPlayer,
+            from
+          });
+          clearConversationState(from);
+        } else {
+          clearConversationState(from);
+        }
+      }
+      break;
+    case "addDropPlayer":
+      if (state.step === "awaitingConfirmation") {
+        if (body.trim().toLowerCase() === "yes") {
+          const teamKey = getUserChosenTeam(from);
+          const leagueKey = getLeagueKeyFromTeamKey(teamKey);
+          await addDropPlayer({
+            accessToken: userData?.accessToken,
+            leagueKey,
+            teamKey,
+            addPlayerName: state.addPlayer,
+            dropPlayerName: state.dropPlayer,
+            from
+          });
+          clearConversationState(from);
+        } else {
+          clearConversationState(from);
+        }
       }
       break;
     case "defaultResponse":

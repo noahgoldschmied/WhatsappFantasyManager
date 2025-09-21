@@ -102,7 +102,7 @@ export function getUserChosenLeague(phoneNumber: string): string {
   return user?.userChosenLeague ?? "";
 }
 
-function getLeagueKeyFromTeamKey(teamKey: string): string {
+export function getLeagueKeyFromTeamKey(teamKey: string): string {
   // For keys like '423.l.12345.t.7'
   return teamKey.split('.t.')[0];
 }
