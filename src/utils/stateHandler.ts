@@ -6,8 +6,7 @@ import { helpCommand } from "../commands/help";
 import { linkCommand } from "../commands/link";
 import { authRequiredCommand } from "../commands/authRequired";
 import { tokenExpiredCommand } from "../commands/tokenExpired";
-import { dropPlayerCommand } from "../commands/dropPlayer";
-import { confirmDropCommand } from "../commands/confirmDrop";
+// Removed old dropPlayerCommand and confirmDropCommand imports
 import { defaultResponseCommand } from "../commands/defaultResponse";
 import { modifyLineupCommand } from "../commands/modifyLineup";
 import { addPlayer, dropPlayer, addDropPlayer } from "../commands/rosterMoves";
