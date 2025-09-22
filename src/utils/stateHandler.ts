@@ -75,8 +75,14 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "addPlayer":
       if (state.step === "awaitingName") {
         await sendWhatsApp(from, "Which player would you like to add? Please reply with the player's name.");
+        // Wait for user reply, do not advance state yet
+        return;
+      } else if (state.step === "awaitingConfirmation" && !state.addPlayer) {
+        // This is the reply with the player name
         setConversationState(from, { type: "addPlayer", step: "awaitingConfirmation", addPlayer: body.trim() });
-      } else if (state.step === "awaitingConfirmation") {
+        await sendWhatsApp(from, `You want to add ${body.trim()}. Reply 'yes' to confirm or 'no' to cancel.`);
+        return;
+      } else if (state.step === "awaitingConfirmation" && state.addPlayer) {
         if (body.trim().toLowerCase() === "yes") {
           const teamKey = getUserChosenTeam(from);
           const leagueKey = getLeagueKeyFromTeamKey(teamKey);
@@ -96,8 +102,14 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "dropPlayer":
       if (state.step === "awaitingName") {
         await sendWhatsApp(from, "Which player would you like to drop? Please reply with the player's name.");
+        // Wait for user reply, do not advance state yet
+        return;
+      } else if (state.step === "awaitingConfirmation" && !state.dropPlayer) {
+        // This is the reply with the player name
         setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", dropPlayer: body.trim() });
-      } else if (state.step === "awaitingConfirmation") {
+        await sendWhatsApp(from, `You want to drop ${body.trim()}. Reply 'yes' to confirm or 'no' to cancel.`);
+        return;
+      } else if (state.step === "awaitingConfirmation" && state.dropPlayer) {
         if (body.trim().toLowerCase() === "yes") {
           const teamKey = getUserChosenTeam(from);
           const leagueKey = getLeagueKeyFromTeamKey(teamKey);
