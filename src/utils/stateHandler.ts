@@ -105,7 +105,8 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           clearConversationState(from);
         } else if (lower === "no") {
           clearConversationState(from);
-        } else {
+        } else if (!state.confirmPromptSent) {
+          setConversationState(from, { ...state, confirmPromptSent: true });
           await sendWhatsApp(from, `You want to add ${state.addPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
         }
       }
@@ -143,7 +144,8 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           clearConversationState(from);
         } else if (lower === "no") {
           clearConversationState(from);
-        } else {
+        } else if (!state.confirmPromptSent) {
+          setConversationState(from, { ...state, confirmPromptSent: true });
           await sendWhatsApp(from, `You want to drop ${state.dropPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
         }
       }
