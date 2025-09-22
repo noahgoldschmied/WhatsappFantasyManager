@@ -96,9 +96,10 @@ export async function stateHandler({ from, body, originalBody, state, userData }
             from
           });
           clearConversationState(from);
-        } else {
+        } else if (body.trim().toLowerCase() === "no") {
           clearConversationState(from);
         }
+        // Do not send another confirmation prompt here
       }
       break;
     case "dropPlayer":
@@ -125,13 +126,19 @@ export async function stateHandler({ from, body, originalBody, state, userData }
             from
           });
           clearConversationState(from);
-        } else {
+        } else if (body.trim().toLowerCase() === "no") {
           clearConversationState(from);
         }
+        // Do not send another confirmation prompt here
       }
       break;
     case "addDropPlayer":
       if (state.step === "awaitingConfirmation") {
+        if (!body || (body.trim().toLowerCase() !== "yes" && body.trim().toLowerCase() !== "no")) {
+          // Prompt for confirmation if not already confirmed/denied
+          await sendWhatsApp(from, `You want to add ${state.addPlayer} and drop ${state.dropPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
+          return;
+        }
         if (body.trim().toLowerCase() === "yes") {
           const teamKey = getUserChosenTeam(from);
           const leagueKey = getLeagueKeyFromTeamKey(teamKey);
@@ -144,7 +151,7 @@ export async function stateHandler({ from, body, originalBody, state, userData }
             from
           });
           clearConversationState(from);
-        } else {
+        } else if (body.trim().toLowerCase() === "no") {
           clearConversationState(from);
         }
       }
