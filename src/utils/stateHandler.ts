@@ -85,7 +85,14 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           return;
         }
       } else if (state.step === "awaitingConfirmation" && state.addPlayer) {
-        if (body.trim().toLowerCase() === "yes") {
+        // If this is the first time in awaitingConfirmation, send the prompt and set a flag
+        if (!state.confirmPromptSent) {
+          setConversationState(from, { ...state, confirmPromptSent: true });
+          await sendWhatsApp(from, `You want to add ${state.addPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
+          return;
+        }
+        const lower = body.trim().toLowerCase();
+        if (lower === "yes") {
           const teamKey = getUserChosenTeam(from);
           const leagueKey = getLeagueKeyFromTeamKey(teamKey);
           await addPlayer({
@@ -96,10 +103,11 @@ export async function stateHandler({ from, body, originalBody, state, userData }
             from
           });
           clearConversationState(from);
-        } else if (body.trim().toLowerCase() === "no") {
+        } else if (lower === "no") {
           clearConversationState(from);
+        } else {
+          await sendWhatsApp(from, `You want to add ${state.addPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
         }
-        // Do not send another confirmation prompt here
       }
       break;
     case "dropPlayer":
@@ -115,7 +123,14 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           return;
         }
       } else if (state.step === "awaitingConfirmation" && state.dropPlayer) {
-        if (body.trim().toLowerCase() === "yes") {
+        // If this is the first time in awaitingConfirmation, send the prompt and set a flag
+        if (!state.confirmPromptSent) {
+          setConversationState(from, { ...state, confirmPromptSent: true });
+          await sendWhatsApp(from, `You want to drop ${state.dropPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
+          return;
+        }
+        const lower = body.trim().toLowerCase();
+        if (lower === "yes") {
           const teamKey = getUserChosenTeam(from);
           const leagueKey = getLeagueKeyFromTeamKey(teamKey);
           await dropPlayer({
@@ -126,10 +141,11 @@ export async function stateHandler({ from, body, originalBody, state, userData }
             from
           });
           clearConversationState(from);
-        } else if (body.trim().toLowerCase() === "no") {
+        } else if (lower === "no") {
           clearConversationState(from);
+        } else {
+          await sendWhatsApp(from, `You want to drop ${state.dropPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
         }
-        // Do not send another confirmation prompt here
       }
       break;
     case "addDropPlayer":
