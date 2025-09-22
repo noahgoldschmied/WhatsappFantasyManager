@@ -62,24 +62,24 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
         const dropPlayer = match[2].trim();
         setConversationState(from, { type: "addDropPlayer", step: "awaitingConfirmation", addPlayer, dropPlayer });
       }
-    } else if (/^add ([\w'.-]+ ?)+$/i.test(body) && lowerBody !== "add player") {
-      // e.g. 'add Nico Collins' but not 'add player'
+    } else if (lowerBody === "add player") {
+      setConversationState(from, { type: "addPlayer", step: "awaitingName" });
+    } else if (lowerBody === "drop player") {
+      setConversationState(from, { type: "dropPlayer", step: "awaitingName" });
+    } else if (/^add ([\w'.-]+ ?)+$/i.test(body)) {
+      // e.g. 'add Nico Collins'
       const match = body.match(/^add ([\w\s'.-]+)$/i);
       if (match && match[1].trim().toLowerCase() !== "player") {
         const addPlayer = match[1].trim();
         setConversationState(from, { type: "addPlayer", step: "awaitingConfirmation", addPlayer });
       }
-    } else if (/^drop ([\w'.-]+ ?)+$/i.test(body) && lowerBody !== "drop player") {
-      // e.g. 'drop Mike Evans' but not 'drop player'
+    } else if (/^drop ([\w'.-]+ ?)+$/i.test(body)) {
+      // e.g. 'drop Mike Evans'
       const match = body.match(/^drop ([\w\s'.-]+)$/i);
       if (match && match[1].trim().toLowerCase() !== "player") {
         const dropPlayer = match[1].trim();
         setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", dropPlayer });
       }
-    } else if (lowerBody === "add player") {
-      setConversationState(from, { type: "addPlayer", step: "awaitingName" });
-    } else if (lowerBody === "drop player") {
-      setConversationState(from, { type: "dropPlayer", step: "awaitingName" });
     } else if (lowerBody === "yes") {
       setConversationState(from, { type: "confirmTransaction", step: "confirmed" });
     } else {
