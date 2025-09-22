@@ -18,8 +18,6 @@ export async function addPlayer({ accessToken, leagueKey, teamKey, playerName, f
       await sendWhatsApp(from, `❌ Could not find player: ${playerName}`);
       return false;
     }
-    await sendWhatsApp(from, `You are about to add player ${playerName} to your team. Reply 'yes' to confirm.`);
-    // Actual confirmation logic should be handled in stateHandler
     await addPlayerYahoo({ accessToken, leagueKey, teamKey, playerKey: player.player_key });
     await sendWhatsApp(from, `✅ Player ${playerName} added successfully!`);
     return true;
@@ -44,8 +42,6 @@ export async function dropPlayer({ accessToken, leagueKey, teamKey, playerName, 
       await sendWhatsApp(from, `❌ Could not find player: ${playerName}`);
       return false;
     }
-    await sendWhatsApp(from, `You are about to drop player ${playerName} from your team. Reply 'yes' to confirm.`);
-    // Actual confirmation logic should be handled in stateHandler
     await dropPlayerYahoo({ accessToken, leagueKey, teamKey, playerKey: player.player_key });
     await sendWhatsApp(from, `✅ Player ${playerName} dropped successfully!`);
     return true;
@@ -76,8 +72,6 @@ export async function addDropPlayer({ accessToken, leagueKey, teamKey, addPlayer
       await sendWhatsApp(from, `❌ Could not find player to drop: ${dropPlayerName}`);
       return false;
     }
-    await sendWhatsApp(from, `You are about to add player ${addPlayerName} and drop player ${dropPlayerName} in one move. Reply 'yes' to confirm.`);
-    // Actual confirmation logic should be handled in stateHandler
     await addDropPlayerYahoo({ accessToken, leagueKey, teamKey, addPlayerKey: addPlayer.player_key, dropPlayerKey: dropPlayer.player_key });
     await sendWhatsApp(from, `✅ Added ${addPlayerName} and dropped ${dropPlayerName} successfully!`);
     return true;
