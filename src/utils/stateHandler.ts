@@ -74,14 +74,16 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       break;  
     case "addPlayer":
       if (state.step === "awaitingName") {
-        await sendWhatsApp(from, "Which player would you like to add? Please reply with the player's name.");
-        // Wait for user reply, do not advance state yet
-        return;
-      } else if (state.step === "awaitingConfirmation" && !state.addPlayer) {
-        // This is the reply with the player name
-        setConversationState(from, { type: "addPlayer", step: "awaitingConfirmation", addPlayer: body.trim() });
-        await sendWhatsApp(from, `You want to add ${body.trim()}. Reply 'yes' to confirm or 'no' to cancel.`);
-        return;
+        // If the body is the same as the trigger, prompt for name
+        if (!body || body.trim().toLowerCase() === "add player") {
+          await sendWhatsApp(from, "Which player would you like to add? Please reply with the player's name.");
+          return;
+        } else {
+          // User replied with a name
+          setConversationState(from, { type: "addPlayer", step: "awaitingConfirmation", addPlayer: body.trim() });
+          await sendWhatsApp(from, `You want to add ${body.trim()}. Reply 'yes' to confirm or 'no' to cancel.`);
+          return;
+        }
       } else if (state.step === "awaitingConfirmation" && state.addPlayer) {
         if (body.trim().toLowerCase() === "yes") {
           const teamKey = getUserChosenTeam(from);
@@ -101,14 +103,16 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       break;
     case "dropPlayer":
       if (state.step === "awaitingName") {
-        await sendWhatsApp(from, "Which player would you like to drop? Please reply with the player's name.");
-        // Wait for user reply, do not advance state yet
-        return;
-      } else if (state.step === "awaitingConfirmation" && !state.dropPlayer) {
-        // This is the reply with the player name
-        setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", dropPlayer: body.trim() });
-        await sendWhatsApp(from, `You want to drop ${body.trim()}. Reply 'yes' to confirm or 'no' to cancel.`);
-        return;
+        // If the body is the same as the trigger, prompt for name
+        if (!body || body.trim().toLowerCase() === "drop player") {
+          await sendWhatsApp(from, "Which player would you like to drop? Please reply with the player's name.");
+          return;
+        } else {
+          // User replied with a name
+          setConversationState(from, { type: "dropPlayer", step: "awaitingConfirmation", dropPlayer: body.trim() });
+          await sendWhatsApp(from, `You want to drop ${body.trim()}. Reply 'yes' to confirm or 'no' to cancel.`);
+          return;
+        }
       } else if (state.step === "awaitingConfirmation" && state.dropPlayer) {
         if (body.trim().toLowerCase() === "yes") {
           const teamKey = getUserChosenTeam(from);
