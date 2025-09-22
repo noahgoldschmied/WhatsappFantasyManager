@@ -85,12 +85,6 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           return;
         }
       } else if (state.step === "awaitingConfirmation" && state.addPlayer) {
-        // If this is the first time in awaitingConfirmation, send the prompt and set a flag
-        if (!state.confirmPromptSent) {
-          setConversationState(from, { ...state, confirmPromptSent: true });
-          await sendWhatsApp(from, `You want to add ${state.addPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
-          return;
-        }
         const lower = body.trim().toLowerCase();
         if (lower === "yes") {
           const teamKey = getUserChosenTeam(from);
@@ -109,6 +103,7 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           setConversationState(from, { ...state, confirmPromptSent: true });
           await sendWhatsApp(from, `You want to add ${state.addPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
         }
+        // If prompt already sent and not yes/no, do nothing
       }
       break;
     case "dropPlayer":
@@ -124,12 +119,6 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           return;
         }
       } else if (state.step === "awaitingConfirmation" && state.dropPlayer) {
-        // If this is the first time in awaitingConfirmation, send the prompt and set a flag
-        if (!state.confirmPromptSent) {
-          setConversationState(from, { ...state, confirmPromptSent: true });
-          await sendWhatsApp(from, `You want to drop ${state.dropPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
-          return;
-        }
         const lower = body.trim().toLowerCase();
         if (lower === "yes") {
           const teamKey = getUserChosenTeam(from);
@@ -148,6 +137,7 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           setConversationState(from, { ...state, confirmPromptSent: true });
           await sendWhatsApp(from, `You want to drop ${state.dropPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
         }
+        // If prompt already sent and not yes/no, do nothing
       }
       break;
     case "addDropPlayer":
