@@ -13,14 +13,21 @@ export async function getRosterCommand({
 }) {
   console.log(`[getRosterCommand] from=${from} teamKey=${teamKey}`);
 
-  const userTeams = getUserTeamsDict(from);
+  // Try to get team name from leagueDict first, fallback to userTeams
+  const { getLeagueDict } = require("../services/userStorage");
+  const leagueDict = getLeagueDict(from);
   let teamName: string | undefined = undefined;
-  if (userTeams) {
-    teamName = getKeyByValue(userTeams, teamKey);
-    if (!teamName) {
-      // If not found, show the teamKey itself (for opponent rosters)
-      teamName = teamKey;
+  if (leagueDict) {
+    teamName = Object.keys(leagueDict).find(name => leagueDict[name] === teamKey);
+  }
+  if (!teamName) {
+    const userTeams = getUserTeamsDict(from);
+    if (userTeams) {
+      teamName = getKeyByValue(userTeams, teamKey);
     }
+  }
+  if (!teamName) {
+    teamName = teamKey;
   }
 
 

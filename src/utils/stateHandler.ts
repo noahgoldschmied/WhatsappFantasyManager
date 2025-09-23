@@ -20,11 +20,25 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "trade":
       // Only allow trade flow to start with 'propose trade'
       if (state.step === "awaitingTradeeTeam") {
+        // Prompt for team name if not provided
         if (!body || body.trim() === "") {
           await sendWhatsApp(from, "Which team do you want to trade with? Please reply with the team name.");
           return;
         }
-        setConversationState(from, { type: "trade", step: "awaitingSendPlayers", tradeeTeamName: body.trim() });
+        // Validate team name against leagueDict
+        let validTeamName = "";
+        const leagueDict = userData?.leagueDict || {};
+        for (const name of Object.keys(leagueDict)) {
+          if (name.toLowerCase() === body.trim().toLowerCase()) {
+            validTeamName = name;
+            break;
+          }
+        }
+        if (!validTeamName) {
+          await sendWhatsApp(from, `Team '${body.trim()}' not found. Please reply with a valid team name from your league.`);
+          return;
+        }
+        setConversationState(from, { type: "trade", step: "awaitingSendPlayers", tradeeTeamName: validTeamName });
         await sendWhatsApp(from, `Which player(s) from your team do you want to send? (comma-separated names)`);
         return;
       }
