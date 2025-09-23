@@ -31,10 +31,11 @@ router.get("/callback", async (req, res) => {
     const tokenData = await exchangeCodeForToken(code as string);
     
     // If we have a state (link code), link this token to a WhatsApp user
-    const fs = require('fs');
-    const path = require('path');
-    const templatePath = path.join(__dirname, 'oauth-success.html');
-    let html = fs.readFileSync(templatePath, 'utf8');
+  const fs = require('fs');
+  const path = require('path');
+  // Always read template from source directory, not build output
+  const templatePath = path.join(process.cwd(), 'src', 'routes', 'oauth-success.html');
+  let html = fs.readFileSync(templatePath, 'utf8');
     let phoneNumber = null;
     if (state) {
       phoneNumber = getPhoneNumberFromLinkCode(state as string);
