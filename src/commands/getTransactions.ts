@@ -18,9 +18,10 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
   rawTransactions.forEach((tx, idx) => {
     console.log(`[getPendingTransactionsCommand] Raw[${idx}]: type=${tx.type}, key=${tx.transaction_key}, status=${tx.status}`);
   });
-  // Filter for pending trades and waivers with status 'pending'
+  // Filter for waivers with status 'pending' and trades with status 'proposed'
   const transactions = rawTransactions.filter(tx =>
-    (tx.type === "pending_trade" || tx.type === "waiver") && tx.status === "pending"
+    (tx.type === "waiver" && tx.status === "pending") ||
+    (tx.type === "pending_trade" && tx.status === "proposed")
   );
   console.log(`[getPendingTransactionsCommand] Filtered transactions:`, JSON.stringify(transactions, null, 2));
   // Map to simplified objects, include transaction_key
