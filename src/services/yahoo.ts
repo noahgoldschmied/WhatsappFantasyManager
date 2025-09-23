@@ -415,16 +415,16 @@ export async function modifyTransactionYahoo({ accessToken, transactionKey, upda
   return true;
 }
 // Get all pending transactions (waivers/trades) for a league
-export async function getPendingTransactionsYahoo(accessToken: string, leagueKey: string) {
-  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
+export async function getPendingTransactionsYahoo(accessToken: string, teamKey: string) {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/team/${teamKey}/transactions`;
   const response = await fetch(url, {
     headers: { "Authorization": `Bearer ${accessToken}` }
   });
-  if (!response.ok) throw new Error(`Failed to get league transactions: ${response.status}`);
+  if (!response.ok) throw new Error(`Failed to get team transactions: ${response.status}`);
   const xml = await response.text();
   const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
   // Defensive: Yahoo may return a single transaction or an array
-  const txArr = data?.fantasy_content?.league?.transactions?.transaction;
+  const txArr = data?.fantasy_content?.team?.transactions?.transaction;
   return Array.isArray(txArr) ? txArr : txArr ? [txArr] : [];
 }
 // Get all teams in a league

@@ -3,14 +3,15 @@ import { getUserChosenLeague } from "../services/userStorage";
 import { sendWhatsApp } from "../services/twilio";
 
 export async function getPendingTransactionsCommand({ from, accessToken }: { from: string; accessToken: string }) {
-  const leagueKey = getUserChosenLeague(from);
-  console.log(`[getPendingTransactionsCommand] from=${from} leagueKey=${leagueKey}`);
-  if (!leagueKey) {
-    console.log(`[getPendingTransactionsCommand] No league selected for user ${from}`);
-    await sendWhatsApp(from, "No league selected. Please choose your team first.");
+  const { getUserChosenTeam } = await import("../services/userStorage");
+  const teamKey = getUserChosenTeam(from);
+  console.log(`[getPendingTransactionsCommand] from=${from} teamKey=${teamKey}`);
+  if (!teamKey) {
+    console.log(`[getPendingTransactionsCommand] No team selected for user ${from}`);
+    await sendWhatsApp(from, "No team selected. Please choose your team first.");
     return;
   }
-  const rawTransactions = await getPendingTransactionsYahoo(accessToken, leagueKey);
+  const rawTransactions = await getPendingTransactionsYahoo(accessToken, teamKey);
   console.log(`[getPendingTransactionsCommand] Raw transactions:`, JSON.stringify(rawTransactions, null, 2));
   // Log each raw transaction type and key
   rawTransactions.forEach((tx, idx) => {
