@@ -54,7 +54,7 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
   let msg = `⏳ *Pending Transactions*\n`;
   mappedTx.forEach((tx, idx) => {
     console.log(`[getPendingTransactionsCommand] Display[${idx}]: type=${tx.type}, key=${tx.transaction_key}, status=${tx.status}, players=${JSON.stringify(tx.players)}`);
-    msg += `\n${idx + 1}. ${tx.type === "pending_trade" ? "Trade" : "Waiver"} (${tx.status || "pending"})\n`;
+    msg += `\n${idx + 1}. ${tx.type === "pending_trade" ? "Trade (Proposed)" : "Waiver"} (${tx.status || "pending"})\n`;
     msg += `   Transaction Key: ${tx.transaction_key}\n`;
     if (tx.players && tx.players.length) {
       tx.players.forEach((p) => {
@@ -63,6 +63,5 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
     }
     if (tx.note) msg += `   Note: ${tx.note}\n`;
   });
-  msg += `\nTo delete or modify a transaction, use:\n  delete transaction [number]\n  modify transaction [number]\n(Where [number] is the transaction's number in this list.)\n`;
   await sendWhatsApp(from, msg);
 }

@@ -4,7 +4,7 @@ import { stateHandler } from "../utils/stateHandler";
 import { getUserToken, isTokenExpired, clearUserChosenTeam } from "../services/userStorage";
 import { fetchAndStoreLeagueTeamsForUser } from "../commands/getLeague";
 import { checkAndPromptWaiverClaim } from "../commands/waiverCheck";
-import { deletePendingTransactionCommand, modifyPendingTransactionCommand } from "../commands/transactionActions";
+// ...existing code...
 import { getPendingTransactionsCommand } from "../commands/getTransactions";
 import { refreshAccessToken } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
@@ -34,18 +34,6 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
     } else if (/\b(show|list|pending) (transactions|moves)\b/i.test(lowerBody)) {
       setConversationState(from, { type: "showTransactions" });
       state = getConversationState(from);
-    } else if (/^delete transaction (\d+)$/i.test(body)) {
-      const match = body.match(/^delete transaction (\d+)$/i);
-      if (match && userData?.accessToken) {
-        await deletePendingTransactionCommand({ from, accessToken: userData.accessToken, transactionKey: match[1] });
-      }
-      return;
-    } else if (/^modify transaction (\d+)$/i.test(body)) {
-      const match = body.match(/^modify transaction (\d+)$/i);
-      if (match && userData?.accessToken) {
-        setConversationState(from, { type: "modifyTransaction", transactionIndex: parseInt(match[1], 10) - 1, step: "start" });
-        state = getConversationState(from);
-      }
     } else if (!userData) {
       setConversationState(from, { type: "authRequired", step: "shown" });
     } else if (isTokenExpired(userData)) {
