@@ -415,17 +415,33 @@ export async function modifyTransactionYahoo({ accessToken, transactionKey, upda
   return true;
 }
 // Get all pending transactions (waivers/trades) for a league
-export async function getPendingTransactionsYahoo(accessToken: string, teamKey: string) {
-  const url = `https://fantasysports.yahooapis.com/fantasy/v2/team/${teamKey}/transactions`;
-  const response = await fetch(url, {
+export async function getPendingTransactionsYahoo(accessToken: string, teamKey: string, leagueKey?: string) {
+  // Use Yahoo API filters for waivers and pending trades
+  if (!leagueKey) throw new Error("leagueKey required for filtered transaction fetch");
+  // Waivers
+  const urlWaiver = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions;team_key=${teamKey};type=waiver`;
+  const responseWaiver = await fetch(urlWaiver, {
     headers: { "Authorization": `Bearer ${accessToken}` }
   });
-  if (!response.ok) throw new Error(`Failed to get team transactions: ${response.status}`);
-  const xml = await response.text();
-  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
-  // Defensive: Yahoo may return a single transaction or an array
-  const txArr = data?.fantasy_content?.team?.transactions?.transaction;
-  return Array.isArray(txArr) ? txArr : txArr ? [txArr] : [];
+  if (!responseWaiver.ok) throw new Error(`Failed to get team waivers: ${responseWaiver.status}`);
+  const xmlWaiver = await responseWaiver.text();
+  const dataWaiver = await parseStringPromise(xmlWaiver, { explicitArray: false, mergeAttrs: true });
+  const txArrWaiver = dataWaiver?.fantasy_content?.league?.transactions?.transaction;
+  const waivers = Array.isArray(txArrWaiver) ? txArrWaiver : txArrWaiver ? [txArrWaiver] : [];
+
+  // Pending trades
+  const urlTrade = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions;team_key=${teamKey};type=pending_trade`;
+  const responseTrade = await fetch(urlTrade, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!responseTrade.ok) throw new Error(`Failed to get team pending trades: ${responseTrade.status}`);
+  const xmlTrade = await responseTrade.text();
+  const dataTrade = await parseStringPromise(xmlTrade, { explicitArray: false, mergeAttrs: true });
+  const txArrTrade = dataTrade?.fantasy_content?.league?.transactions?.transaction;
+  const trades = Array.isArray(txArrTrade) ? txArrTrade : txArrTrade ? [txArrTrade] : [];
+
+  // Combine and return
+  return [...waivers, ...trades];
 }
 // Get all teams in a league
 export async function getLeagueTeams(accessToken: string, leagueKey: string) {
