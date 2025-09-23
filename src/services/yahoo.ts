@@ -1,81 +1,4 @@
-// Get all pending transactions (waivers/trades) for a league
-export async function getPendingTransactionsYahoo(accessToken: string, leagueKey: string) {
-  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
-  const response = await fetch(url, {
-    headers: { "Authorization": `Bearer ${accessToken}` }
-  });
-  if (!response.ok) throw new Error(`Failed to get league transactions: ${response.status}`);
-  const xml = await response.text();
-  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
-  // Defensive: Yahoo may return a single transaction or an array
-  const txArr = data?.fantasy_content?.league?.transactions?.transaction;
-  let txList = Array.isArray(txArr) ? txArr : txArr ? [txArr] : [];
-  // Filter for pending trades and waivers
-  txList = txList.filter(tx => tx.type === "pending_trade" || tx.type === "waiver");
-  // Map to simplified objects, include transaction_key
-  return txList.map(tx => ({
-    transaction_key: tx.transaction_key,
-    type: tx.type,
-    status: tx.status,
-    note: tx.trade_note || tx.faab_bid || tx.waiver_priority,
-    players: Array.isArray(tx.players?.player)
-      ? (tx.players.player as any[]).map((p: any) => ({
-          name: p.name?.full || p.name,
-          transaction_type: p.transaction_data?.type
-        }))
-      : tx.players?.player
-      ? [{
-          name: tx.players.player.name?.full || tx.players.player.name,
-          transaction_type: tx.players.player.transaction_data?.type
-        }]
-      : []
-  }));
-}
-// Get all teams in a league
-export async function getLeagueTeams(accessToken: string, leagueKey: string) {
-  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/teams`;
-  const response = await fetch(url, {
-    headers: { "Authorization": `Bearer ${accessToken}` }
-  });
-  if (!response.ok) throw new Error(`Failed to get league teams: ${response.status}`);
-  const xml = await response.text();
-  return await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
-}
-// Post a trade transaction (pending_trade)
-export async function postTradeYahoo({ accessToken, leagueKey, traderTeamKey, tradeeTeamKey, traderPlayerKeys, tradeePlayerKeys, tradeNote }: {
-  accessToken: string;
-  leagueKey: string;
-  traderTeamKey: string;
-  tradeeTeamKey: string;
-  traderPlayerKeys: string[];
-  tradeePlayerKeys: string[];
-  tradeNote?: string;
-}): Promise<boolean> {
-  // Build XML for trade
-  let playersXml = "";
-  for (const pk of traderPlayerKeys) {
-    playersXml += `<player>\n<player_key>${pk}</player_key>\n<transaction_data>\n<type>pending_trade</type>\n<source_team_key>${traderTeamKey}</source_team_key>\n<destination_team_key>${tradeeTeamKey}</destination_team_key>\n</transaction_data>\n</player>\n`;
-  }
-  for (const pk of tradeePlayerKeys) {
-    playersXml += `<player>\n<player_key>${pk}</player_key>\n<transaction_data>\n<type>pending_trade</type>\n<source_team_key>${tradeeTeamKey}</source_team_key>\n<destination_team_key>${traderTeamKey}</destination_team_key>\n</transaction_data>\n</player>\n`;
-  }
-  const xmlBody = `<?xml version='1.0'?>\n<fantasy_content>\n  <transaction>\n    <type>pending_trade</type>\n    <trader_team_key>${traderTeamKey}</trader_team_key>\n    <tradee_team_key>${tradeeTeamKey}</tradee_team_key>\n    ${tradeNote ? `<trade_note>${tradeNote}</trade_note>` : ''}\n    <players>\n${playersXml}    </players>\n  </transaction>\n</fantasy_content>`;
-  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
-  console.log("[postTradeYahoo] XML payload:", xmlBody);
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${accessToken}`,
-      "Content-Type": "application/xml",
-    },
-    body: xmlBody,
-  });
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`[postTradeYahoo] Failed: ${response.status} ${error}`);
-  }
-  return true;
-}
+
 import { parseStringPromise } from "xml2js";
 // Yahoo Fantasy API client
 
@@ -437,6 +360,115 @@ export async function addDropPlayerYahoo({ accessToken, leagueKey, teamKey, addP
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`[addDropPlayerYahoo] Failed: ${response.status} ${error}`);
+  }
+  return true;
+}
+
+// Check if a player is on waivers in a league
+export async function isPlayerOnWaivers({ accessToken, leagueKey, playerKey }: {
+  accessToken: string;
+  leagueKey: string;
+  playerKey: string;
+}): Promise<boolean> {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/players;player_keys=${playerKey}`;
+  const response = await fetch(url, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!response.ok) throw new Error(`Failed to get player info: ${response.status}`);
+  const xml = await response.text();
+  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
+  const player = data?.fantasy_content?.league?.players?.player;
+  // Yahoo returns player status as 'status'
+  return player?.status === "W"; // 'W' means on waivers
+}
+
+// Delete a transaction (waiver or trade)
+export async function deleteTransactionYahoo({ accessToken, transactionKey }: {
+  accessToken: string;
+  transactionKey: string;
+}): Promise<boolean> {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/transaction/${transactionKey}`;
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!response.ok) throw new Error(`Failed to delete transaction: ${response.status}`);
+  return true;
+}
+
+// Modify a transaction (waiver or trade)
+export async function modifyTransactionYahoo({ accessToken, transactionKey, updateXml }: {
+  accessToken: string;
+  transactionKey: string;
+  updateXml: string;
+}): Promise<boolean> {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/transaction/${transactionKey}`;
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/xml"
+    },
+    body: updateXml
+  });
+  if (!response.ok) throw new Error(`Failed to modify transaction: ${response.status}`);
+  return true;
+}
+// Get all pending transactions (waivers/trades) for a league
+export async function getPendingTransactionsYahoo(accessToken: string, leagueKey: string) {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
+  const response = await fetch(url, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!response.ok) throw new Error(`Failed to get league transactions: ${response.status}`);
+  const xml = await response.text();
+  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
+  // Defensive: Yahoo may return a single transaction or an array
+  const txArr = data?.fantasy_content?.league?.transactions?.transaction;
+  return Array.isArray(txArr) ? txArr : txArr ? [txArr] : [];
+}
+// Get all teams in a league
+export async function getLeagueTeams(accessToken: string, leagueKey: string) {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/teams`;
+  const response = await fetch(url, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!response.ok) throw new Error(`Failed to get league teams: ${response.status}`);
+  const xml = await response.text();
+  return await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
+}
+// Post a trade transaction (pending_trade)
+export async function postTradeYahoo({ accessToken, leagueKey, traderTeamKey, tradeeTeamKey, traderPlayerKeys, tradeePlayerKeys, tradeNote }: {
+  accessToken: string;
+  leagueKey: string;
+  traderTeamKey: string;
+  tradeeTeamKey: string;
+  traderPlayerKeys: string[];
+  tradeePlayerKeys: string[];
+  tradeNote?: string;
+}): Promise<boolean> {
+  // Build XML for trade
+  let playersXml = "";
+  for (const pk of traderPlayerKeys) {
+    playersXml += `<player>\n<player_key>${pk}</player_key>\n<transaction_data>\n<type>pending_trade</type>\n<source_team_key>${traderTeamKey}</source_team_key>\n<destination_team_key>${tradeeTeamKey}</destination_team_key>\n</transaction_data>\n</player>\n`;
+  }
+  for (const pk of tradeePlayerKeys) {
+    playersXml += `<player>\n<player_key>${pk}</player_key>\n<transaction_data>\n<type>pending_trade</type>\n<source_team_key>${tradeeTeamKey}</source_team_key>\n<destination_team_key>${traderTeamKey}</destination_team_key>\n</transaction_data>\n</player>\n`;
+  }
+  const xmlBody = `<?xml version='1.0'?>\n<fantasy_content>\n  <transaction>\n    <type>pending_trade</type>\n    <trader_team_key>${traderTeamKey}</trader_team_key>\n    <tradee_team_key>${tradeeTeamKey}</tradee_team_key>\n    ${tradeNote ? `<trade_note>${tradeNote}</trade_note>` : ''}\n    <players>\n${playersXml}    </players>\n  </transaction>\n</fantasy_content>`;
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
+  console.log("[postTradeYahoo] XML payload:", xmlBody);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/xml",
+    },
+    body: xmlBody,
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`[postTradeYahoo] Failed: ${response.status} ${error}`);
   }
   return true;
 }

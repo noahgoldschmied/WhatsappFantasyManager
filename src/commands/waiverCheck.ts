@@ -1,4 +1,4 @@
-import { isPlayerOnWaivers } from "../services/yahooTransactions";
+import { isPlayerOnWaivers } from "../services/yahoo";
 import { getPlayerByName } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
 

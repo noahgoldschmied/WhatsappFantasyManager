@@ -1,4 +1,4 @@
-import { deleteTransactionYahoo, modifyTransactionYahoo } from "../services/yahooTransactions";
+import { deleteTransactionYahoo, modifyTransactionYahoo } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
 import { getPendingTransactions } from "../services/userStorage";
 
