@@ -27,32 +27,25 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
   }
 
   if (!state) {
-    // Delete a pending transaction: 'delete transaction [number]'
-    if (/^delete transaction (\d+)$/i.test(body)) {
+    if (lowerBody === "help") {
+      setConversationState(from, { type: "help", step: "shown" });
+    } else if (lowerBody === "link") {
+      setConversationState(from, { type: "link", step: "shown" });
+    } else if (/\b(show|list|pending) (transactions|moves)\b/i.test(lowerBody)) {
+      setConversationState(from, { type: "showTransactions" });
+      state = getConversationState(from);
+    } else if (/^delete transaction (\d+)$/i.test(body)) {
       const match = body.match(/^delete transaction (\d+)$/i);
       if (match && userData?.accessToken) {
         await deletePendingTransactionCommand({ from, accessToken: userData.accessToken, transactionKey: match[1] });
       }
       return;
-    }
-    // Modify a pending transaction: 'modify transaction [number]'
-    if (/^modify transaction (\d+)$/i.test(body)) {
+    } else if (/^modify transaction (\d+)$/i.test(body)) {
       const match = body.match(/^modify transaction (\d+)$/i);
       if (match && userData?.accessToken) {
         setConversationState(from, { type: "modifyTransaction", transactionIndex: parseInt(match[1], 10) - 1, step: "start" });
         state = getConversationState(from);
       }
-      // Do not return; let stateHandler handle the flow
-    }
-    // Robustly match transaction listing commands
-    if (/\b(show|list|pending) (transactions|moves)\b/i.test(lowerBody)) {
-      setConversationState(from, { type: "showTransactions" });
-      state = getConversationState(from);
-    }
-    if (lowerBody === "help") {
-      setConversationState(from, { type: "help", step: "shown" });
-    } else if (lowerBody === "link") {
-      setConversationState(from, { type: "link", step: "shown" });
     } else if (!userData) {
       setConversationState(from, { type: "authRequired", step: "shown" });
     } else if (isTokenExpired(userData)) {
