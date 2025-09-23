@@ -17,6 +17,83 @@ import { getUserChosenTeam, getUserChosenLeague, getLeagueKeyFromTeamKey } from 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
   if (!state) return;
     switch (state.type) {
+    case "trade":
+      // Step 1: If awaiting team name
+      if (state.step === "awaitingTradeeTeam") {
+        if (!body || body.trim() === "") {
+          await sendWhatsApp(from, "Which team do you want to trade with? Please reply with the team name.");
+          return;
+        }
+        setConversationState(from, { type: "trade", step: "init", tradeeTeamName: body.trim() });
+        await sendWhatsApp(from, `Which player(s) from your team do you want to send? (comma-separated names)`);
+        return;
+      }
+      // Step 2: If just started (team name known), prompt for players to send
+      if (state.step === "init" && state.tradeeTeamName) {
+        if (!body || body.trim() === state.tradeeTeamName) {
+          await sendWhatsApp(from, `Which player(s) from your team do you want to send? (comma-separated names)`);
+          return;
+        }
+        setConversationState(from, { type: "trade", step: "awaitingSendPlayers", tradeeTeamName: state.tradeeTeamName, sendPlayers: body.split(",").map((s: string) => s.trim()).filter(Boolean) });
+        await sendWhatsApp(from, `Which player(s) from ${state.tradeeTeamName} do you want to receive? (comma-separated names)`);
+        return;
+      }
+      // Step 3: Awaiting players to receive
+      if (state.step === "awaitingSendPlayers" && state.tradeeTeamName && state.sendPlayers) {
+        if (!body || body.trim() === "") {
+          await sendWhatsApp(from, `Which player(s) from ${state.tradeeTeamName} do you want to receive? (comma-separated names)`);
+          return;
+        }
+        setConversationState(from, { type: "trade", step: "awaitingTradeNote", tradeeTeamName: state.tradeeTeamName, sendPlayers: state.sendPlayers, receivePlayers: body.split(",").map((s: string) => s.trim()).filter(Boolean) });
+        await sendWhatsApp(from, `Add a note for your trade proposal, or reply 'skip' to continue.`);
+        return;
+      }
+      // Step 4: Awaiting trade note
+      if (state.step === "awaitingTradeNote" && state.tradeeTeamName && state.sendPlayers && state.receivePlayers) {
+        let note = body.trim().toLowerCase() === "skip" ? "" : body.trim();
+        setConversationState(from, { type: "trade", step: "awaitingConfirmation", tradeeTeamName: state.tradeeTeamName, sendPlayers: state.sendPlayers, receivePlayers: state.receivePlayers, tradeNote: note });
+        await sendWhatsApp(from, `You are proposing to send ${state.sendPlayers.join(", ")} to ${state.tradeeTeamName} for ${state.receivePlayers.join(", ")}${note ? ". Note: " + note : ""}. Reply 'yes' to confirm or 'no' to cancel.`);
+        return;
+      }
+      // Step 5: Confirmation
+      if (state.step === "awaitingConfirmation" && state.tradeeTeamName && state.sendPlayers && state.receivePlayers) {
+        const lower = body.trim().toLowerCase();
+        if (lower === "yes") {
+          // Find tradee team key from name
+          const userTeams = userData?.userTeams || {};
+          let tradeeTeamKey = "";
+          for (const [name, key] of Object.entries(userTeams)) {
+            if (name.toLowerCase() === state.tradeeTeamName.toLowerCase()) {
+              tradeeTeamKey = String(key);
+              break;
+            }
+          }
+          if (!tradeeTeamKey) {
+            await sendWhatsApp(from, `Could not find team: ${state.tradeeTeamName}. Trade cancelled.`);
+            clearConversationState(from);
+            return;
+          }
+          // Call sendTradeCommand
+          const { sendTradeCommand } = await import("../commands/sendTrade");
+          await sendTradeCommand({
+            from,
+            accessToken: userData?.accessToken,
+            tradeeTeamKey,
+            traderPlayers: state.sendPlayers,
+            tradeePlayers: state.receivePlayers,
+            tradeNote: state.tradeNote,
+          });
+          clearConversationState(from);
+        } else if (lower === "no") {
+          await sendWhatsApp(from, "❌ Trade cancelled.");
+          clearConversationState(from);
+        } else if (!state.confirmPromptSent) {
+          setConversationState(from, { ...state, confirmPromptSent: true });
+          await sendWhatsApp(from, `You are proposing to send ${state.sendPlayers.join(", ")} to ${state.tradeeTeamName} for ${state.receivePlayers.join(", ")}${state.tradeNote ? ". Note: " + state.tradeNote : ""}. Reply 'yes' to confirm or 'no' to cancel.`);
+        }
+        // If prompt already sent and not yes/no, do nothing
+      }
+      break;
     case "help":
       await helpCommand({ from });
       clearConversationState(from);

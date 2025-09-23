@@ -1,3 +1,38 @@
+// Post a trade transaction (pending_trade)
+export async function postTradeYahoo({ accessToken, leagueKey, traderTeamKey, tradeeTeamKey, traderPlayerKeys, tradeePlayerKeys, tradeNote }: {
+  accessToken: string;
+  leagueKey: string;
+  traderTeamKey: string;
+  tradeeTeamKey: string;
+  traderPlayerKeys: string[];
+  tradeePlayerKeys: string[];
+  tradeNote?: string;
+}): Promise<boolean> {
+  // Build XML for trade
+  let playersXml = "";
+  for (const pk of traderPlayerKeys) {
+    playersXml += `<player>\n<player_key>${pk}</player_key>\n<transaction_data>\n<type>pending_trade</type>\n<source_team_key>${traderTeamKey}</source_team_key>\n<destination_team_key>${tradeeTeamKey}</destination_team_key>\n</transaction_data>\n</player>\n`;
+  }
+  for (const pk of tradeePlayerKeys) {
+    playersXml += `<player>\n<player_key>${pk}</player_key>\n<transaction_data>\n<type>pending_trade</type>\n<source_team_key>${tradeeTeamKey}</source_team_key>\n<destination_team_key>${traderTeamKey}</destination_team_key>\n</transaction_data>\n</player>\n`;
+  }
+  const xmlBody = `<?xml version='1.0'?>\n<fantasy_content>\n  <transaction>\n    <type>pending_trade</type>\n    <trader_team_key>${traderTeamKey}</trader_team_key>\n    <tradee_team_key>${tradeeTeamKey}</tradee_team_key>\n    ${tradeNote ? `<trade_note>${tradeNote}</trade_note>` : ''}\n    <players>\n${playersXml}    </players>\n  </transaction>\n</fantasy_content>`;
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
+  console.log("[postTradeYahoo] XML payload:", xmlBody);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/xml",
+    },
+    body: xmlBody,
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`[postTradeYahoo] Failed: ${response.status} ${error}`);
+  }
+  return true;
+}
 import { parseStringPromise } from "xml2js";
 // Yahoo Fantasy API client
 

@@ -3,46 +3,25 @@ import { sendWhatsApp } from "../services/twilio";
 export async function helpCommand({ from }: { from: string }) {
   const helpText = `🤖 *Boardy WhatsApp Bot Help*
 
-*Available commands:*
-- help — Show this help message
-- link — Link your Yahoo account
-- show teams — List your Yahoo teams
-- choose team — Select a team
-- get roster — Show your roster
-- get standings — Show league standings
-- get matchup — Show your current matchup and scores
-- modify lineup — Start lineup change flow
-- add [player name] — Add a player
-- drop [player name] — Drop a player
-- add [player name] drop [player name] — Add and drop in one move
-- add player — Start add flow (will prompt for name)
-- drop player — Start drop flow (will prompt for name)
-- restart — Reset the conversation
+*Core commands:*
+- help — Show help
+- link — Link Yahoo account
+- show teams / choose team — Select your team
+- get roster / get standings / get matchup [week N] — View info
+- modify lineup — Change lineup (e.g. 'start Mahomes at QB week 3')
+- add/drop [player name] — Add/drop players
+- add [player] drop [player] — Add/drop in one move
+- restart — Reset session
 
-*Lineup changes:*
-Reply with e.g. 'start Patrick Mahomes at QB week 3' or 'bench Ezekiel Elliott week 3'.
-You can make multiple moves in a row, then send 'done' when finished.
+*Trade players:*
+- trade with [team name] — Start trade proposal
+- propose trade — Start trade flow (will prompt for team)
+  → Bot will guide you to select players to send/receive and add a note, then confirm before submitting.
 
-*Add/Drop flows:*
-You can add/drop players by name, or start the flow and reply with the name when prompted. All moves require confirmation before executing.
-
-*Team selection:*
-If you haven't chosen a team, you'll be prompted to do so before any roster or matchup commands.
-
-*Valid Yahoo lineup positions:*
-- QB (Quarterback)
-- RB (Running Back)
-- WR (Wide Receiver)
-- TE (Tight End)
-- K (Kicker)
-- DEF (Defense)
-- BN (Bench)
-- W/R/T (FLEX: WR/RB/TE)
-- W/R (WR/RB FLEX)
-- W/T (WR/TE FLEX)
-- Q/W/R/T (Superflex)
-
-You can say 'flex' and it will be converted to 'W/R/T'.
+*Tips:*
+- All flows are step-by-step and require confirmation.
+- If you haven't chosen a team, you'll be prompted before roster/matchup/trade commands.
+- Valid lineup positions: QB, RB, WR, TE, K, DEF, BN, FLEX (W/R/T), Superflex (Q/W/R/T)
 `;
   await sendWhatsApp(from, helpText);
 }

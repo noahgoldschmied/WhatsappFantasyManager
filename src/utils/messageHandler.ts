@@ -46,6 +46,14 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       } 
     } else if (lowerBody === "get roster") {
       setConversationState(from, { type: "getRoster" });
+    } else if (/^trade with ([\w\s'.-]+)$/i.test(body)) {
+      // e.g. 'trade with Team Name'
+      const match = body.match(/^trade with ([\w\s'.-]+)$/i);
+      if (match) {
+        setConversationState(from, { type: "trade", step: "init", tradeeTeamName: match[1].trim() });
+      }
+    } else if (lowerBody === "propose trade") {
+      setConversationState(from, { type: "trade", step: "awaitingTradeeTeam" });
     } else if (lowerBody.startsWith("get matchup")) {
       // Parse week if present, e.g. "get matchup week 2"
       const weekMatch = lowerBody.match(/get matchup(?: week (\d+))?/);
