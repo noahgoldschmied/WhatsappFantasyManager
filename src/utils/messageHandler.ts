@@ -1,7 +1,8 @@
 import { getConversationState, setConversationState, clearConversationState } from "../utils/conversationState";
 import { stateHandler } from "../utils/stateHandler";
-import { getUserToken, isTokenExpired } from "../services/userStorage";
+import { getUserToken, isTokenExpired, clearUserChosenTeam } from "../services/userStorage";
 import { refreshAccessToken } from "../services/yahoo";
+import { sendWhatsApp } from "../services/twilio";
 
 export async function conversationRouter({ from, body, originalBody }: { from: string, body: string, originalBody: string }) {
   const lowerBody = body.toLowerCase();
@@ -9,9 +10,11 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
   let state = getConversationState(from);
   console.log(`[messageHandler] from=${from} state=`, state);
 
-    //If user says 'restart', clear state and return immediately
+    //If user says 'restart', clear state and team selection, then return immediately
     if (body.trim().toLowerCase() === "restart") {
       clearConversationState(from);
+      clearUserChosenTeam(from);
+      await sendWhatsApp(from, "🔄 Session restarted. Please choose your team again.");
       await stateHandler({ from, body, originalBody, state: null, userData });
       return;
     }

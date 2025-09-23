@@ -1,3 +1,10 @@
+export function clearUserChosenTeam(phoneNumber: string) {
+  const user = users.get(phoneNumber);
+  if (user) {
+    user.userChosenTeam = undefined;
+    user.userChosenLeague = undefined;
+  }
+}
 // Simple in-memory user storage for demo purposes
 // In production, use a proper database
 
