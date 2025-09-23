@@ -12,8 +12,9 @@ export async function getPendingTransactionsYahoo(accessToken: string, leagueKey
   let txList = Array.isArray(txArr) ? txArr : txArr ? [txArr] : [];
   // Filter for pending trades and waivers
   txList = txList.filter(tx => tx.type === "pending_trade" || tx.type === "waiver");
-  // Map to simplified objects
+  // Map to simplified objects, include transaction_key
   return txList.map(tx => ({
+    transaction_key: tx.transaction_key,
     type: tx.type,
     status: tx.status,
     note: tx.trade_note || tx.faab_bid || tx.waiver_priority,

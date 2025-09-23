@@ -3,6 +3,8 @@ import { getConversationState, setConversationState, clearConversationState } fr
 import { stateHandler } from "../utils/stateHandler";
 import { getUserToken, isTokenExpired, clearUserChosenTeam } from "../services/userStorage";
 import { fetchAndStoreLeagueTeamsForUser } from "../commands/getLeague";
+import { checkAndPromptWaiverClaim } from "../commands/waiverCheck";
+import { deletePendingTransactionCommand, modifyPendingTransactionCommand } from "../commands/transactionActions";
 import { getPendingTransactionsCommand } from "../commands/getTransactions";
 import { refreshAccessToken } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
@@ -25,6 +27,23 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
   }
 
   if (!state) {
+    // Delete a pending transaction: 'delete transaction [number]'
+    if (/^delete transaction (\d+)$/i.test(body)) {
+      const match = body.match(/^delete transaction (\d+)$/i);
+      if (match && userData?.accessToken) {
+        await deletePendingTransactionCommand({ from, accessToken: userData.accessToken, transactionKey: match[1] });
+      }
+      return;
+    }
+    // Modify a pending transaction: 'modify transaction [number]'
+    if (/^modify transaction (\d+)$/i.test(body)) {
+      const match = body.match(/^modify transaction (\d+)$/i);
+      if (match && userData?.accessToken) {
+        setConversationState(from, { type: "modifyTransaction", transactionIndex: parseInt(match[1], 10) - 1, step: "start" });
+        state = getConversationState(from);
+      }
+      // Do not return; let stateHandler handle the flow
+    }
     if (lowerBody === "show transactions" || lowerBody === "pending moves") {
       setConversationState(from, { type: "showTransactions" });
       state = getConversationState(from);
@@ -116,6 +135,10 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       const match = body.match(/^add ([\w\s'.-]+)$/i);
       if (match && match[1].trim().toLowerCase() !== "player") {
         const addPlayer = match[1].trim();
+        // Check if player is on waivers and prompt for claim if needed
+        if (userData?.accessToken && userData?.userChosenLeague) {
+          await checkAndPromptWaiverClaim({ from, accessToken: userData.accessToken, leagueKey: userData.userChosenLeague, playerName: addPlayer });
+        }
         setConversationState(from, { type: "addPlayer", step: "awaitingConfirmation", addPlayer });
       }
     } else if (/^drop ([\w'.-]+ ?)+$/i.test(body)) {

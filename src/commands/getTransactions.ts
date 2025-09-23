@@ -16,6 +16,7 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
   let msg = `⏳ *Pending Transactions*\n`;
   for (const tx of transactions) {
     msg += `\n• ${tx.type === "pending_trade" ? "Trade" : "Waiver"} (${tx.status || "pending"})\n`;
+    msg += `   Transaction Key: ${tx.transaction_key}\n`;
     if (tx.players && tx.players.length) {
       for (const p of tx.players) {
         msg += `   - ${p.name} (${p.transaction_type})\n`;
@@ -23,5 +24,6 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
     }
     if (tx.note) msg += `   Note: ${tx.note}\n`;
   }
+  msg += `\nTo delete or modify a transaction, use:\n  delete transaction [transactionKey]\n  modify transaction [transactionKey] [xml]\n`;
   await sendWhatsApp(from, msg);
 }

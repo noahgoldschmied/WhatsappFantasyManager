@@ -11,6 +11,21 @@ interface UserData {
   leagueDict?: Record<string, string>; // teamName -> teamKey for all teams in league
   userChosenTeam?: string;
   userChosenLeague?: string;
+  pendingTransactions?: any[];
+}
+
+// Set pending transactions for a user
+export function setPendingTransactions(phoneNumber: string, transactions: any[]) {
+  const user = users.get(phoneNumber);
+  if (user) {
+    user.pendingTransactions = transactions;
+  }
+}
+
+// Get pending transactions for a user
+export function getPendingTransactions(phoneNumber: string): any[] {
+  const user = users.get(phoneNumber);
+  return user?.pendingTransactions ?? [];
 }
 // Set the user's teams dictionary (teamName -> teamKey)
 export function setUserTeams(phoneNumber: string, teams: Record<string, string>) {

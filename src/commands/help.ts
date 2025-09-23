@@ -1,28 +1,37 @@
 import { sendWhatsApp } from "../services/twilio";
 
 export async function helpCommand({ from }: { from: string }) {
-  const helpText = `🤖 *Boardy WhatsApp Bot Help*
-
-*Core commands:*
-- help — Show help
-- link — Link Yahoo account
-- show teams / choose team — Select your team
-- show league — List every team in your league
-- show transactions / pending moves — View your pending waivers and trades
-- get roster / get standings / get matchup [week N] — View info
-- modify lineup — Change lineup (e.g. 'start Mahomes at QB week 3')
-- add/drop [player name] — Add/drop players
-- add [player] drop [player] — Add/drop in one move
-- restart — Reset session
-
-*Trade players:*
-- propose trade — Start trade flow (will prompt for team)
-  → Bot will guide you to select a team, players to send/receive, add a note, then confirm before submitting.
-
-*Tips:*
-- All flows are step-by-step and require confirmation.
-- If you haven't chosen a team, you'll be prompted before roster/matchup/trade commands.
-- Valid lineup positions: QB, RB, WR, TE, K, DEF, BN, FLEX (W/R/T), Superflex (Q/W/R/T)
-`;
+  const helpText = [
+    '🤖 *Boardy WhatsApp Bot Help*',
+    '',
+    '*Core commands:*',
+    '- help — Show help',
+    '- link — Link Yahoo account',
+    '- show teams / choose team — Select your team',
+    '- show league — List every team in your league',
+    '- show transactions / pending moves — View your pending waivers and trades',
+    '- delete transaction [number] — Delete a pending waiver/trade',
+    '- modify transaction [number] — Modify a pending waiver/trade (step-by-step, no XML required)',
+    '- get roster / get standings / get matchup [week N] — View info',
+    '- modify lineup — Change lineup (e.g. "start Mahomes at QB week 3")',
+    '- add/drop [player name] — Add/drop players',
+    '- add [player] drop [player] — Add/drop in one move',
+    '- restart — Reset session',
+    '',
+    '*Waivers:*',
+    '- If you try to add a player on waivers, you\'ll be prompted to put in a claim.',
+    '',
+    '*Trade players:*',
+    '- propose trade — Start trade flow (will prompt for team)',
+    '  → Bot will guide you to select a team, players to send/receive, add a note, then confirm before submitting.',
+    '',
+    '*Modify Transactions:*',
+    '- Use "modify transaction [number]" to start a step-by-step flow to change players or notes in a pending transaction. No technical details or XML required.',
+    '',
+    '*Tips:*',
+    '- All flows are step-by-step and require confirmation.',
+    '- If you haven\'t chosen a team, you\'ll be prompted before roster/matchup/trade commands.',
+    '- Valid lineup positions: QB, RB, WR, TE, K, DEF, BN, FLEX (W/R/T), Superflex (Q/W/R/T)',
+  ].join('\n');
   await sendWhatsApp(from, helpText);
 }
