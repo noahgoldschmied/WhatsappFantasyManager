@@ -18,28 +18,26 @@ export async function stateHandler({ from, body, originalBody, state, userData }
   if (!state) return;
     switch (state.type) {
     case "trade":
-      // Step 1: If awaiting team name
+      // Only allow trade flow to start with 'propose trade'
       if (state.step === "awaitingTradeeTeam") {
         if (!body || body.trim() === "") {
           await sendWhatsApp(from, "Which team do you want to trade with? Please reply with the team name.");
           return;
         }
-        setConversationState(from, { type: "trade", step: "init", tradeeTeamName: body.trim() });
+        setConversationState(from, { type: "trade", step: "awaitingSendPlayers", tradeeTeamName: body.trim() });
         await sendWhatsApp(from, `Which player(s) from your team do you want to send? (comma-separated names)`);
         return;
       }
-      // Step 2: If just started (team name known), prompt for players to send
-      if (state.step === "init" && state.tradeeTeamName) {
-        if (!body || body.trim() === state.tradeeTeamName) {
+      if (state.step === "awaitingSendPlayers" && state.tradeeTeamName) {
+        if (!body || body.trim() === "") {
           await sendWhatsApp(from, `Which player(s) from your team do you want to send? (comma-separated names)`);
           return;
         }
-        setConversationState(from, { type: "trade", step: "awaitingSendPlayers", tradeeTeamName: state.tradeeTeamName, sendPlayers: body.split(",").map((s: string) => s.trim()).filter(Boolean) });
+        setConversationState(from, { type: "trade", step: "awaitingReceivePlayers", tradeeTeamName: state.tradeeTeamName, sendPlayers: body.split(",").map((s: string) => s.trim()).filter(Boolean) });
         await sendWhatsApp(from, `Which player(s) from ${state.tradeeTeamName} do you want to receive? (comma-separated names)`);
         return;
       }
-      // Step 3: Awaiting players to receive
-      if (state.step === "awaitingSendPlayers" && state.tradeeTeamName && state.sendPlayers) {
+      if (state.step === "awaitingReceivePlayers" && state.tradeeTeamName && state.sendPlayers) {
         if (!body || body.trim() === "") {
           await sendWhatsApp(from, `Which player(s) from ${state.tradeeTeamName} do you want to receive? (comma-separated names)`);
           return;
@@ -48,14 +46,12 @@ export async function stateHandler({ from, body, originalBody, state, userData }
         await sendWhatsApp(from, `Add a note for your trade proposal, or reply 'skip' to continue.`);
         return;
       }
-      // Step 4: Awaiting trade note
       if (state.step === "awaitingTradeNote" && state.tradeeTeamName && state.sendPlayers && state.receivePlayers) {
         let note = body.trim().toLowerCase() === "skip" ? "" : body.trim();
         setConversationState(from, { type: "trade", step: "awaitingConfirmation", tradeeTeamName: state.tradeeTeamName, sendPlayers: state.sendPlayers, receivePlayers: state.receivePlayers, tradeNote: note });
         await sendWhatsApp(from, `You are proposing to send ${state.sendPlayers.join(", ")} to ${state.tradeeTeamName} for ${state.receivePlayers.join(", ")}${note ? ". Note: " + note : ""}. Reply 'yes' to confirm or 'no' to cancel.`);
         return;
       }
-      // Step 5: Confirmation
       if (state.step === "awaitingConfirmation" && state.tradeeTeamName && state.sendPlayers && state.receivePlayers) {
         const lower = body.trim().toLowerCase();
         if (lower === "yes") {

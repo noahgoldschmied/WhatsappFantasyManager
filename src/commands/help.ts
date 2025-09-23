@@ -15,9 +15,8 @@ export async function helpCommand({ from }: { from: string }) {
 - restart — Reset session
 
 *Trade players:*
-- trade with [team name] — Start trade proposal
 - propose trade — Start trade flow (will prompt for team)
-  → Bot will guide you to select players to send/receive and add a note, then confirm before submitting.
+  → Bot will guide you to select a team, players to send/receive, add a note, then confirm before submitting.
 
 *Tips:*
 - All flows are step-by-step and require confirmation.

@@ -12,28 +12,16 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
   let state = getConversationState(from);
   console.log(`[messageHandler] from=${from} state=`, state);
 
-  // Show all teams in the user's league
-  if (lowerBody === "show league") {
-    // If leagueDict is missing, try to fetch and store it
-    if (!userData?.leagueDict || Object.keys(userData.leagueDict).length === 0) {
-      if (userData?.accessToken) {
-        await fetchAndStoreLeagueTeamsForUser({ from, accessToken: userData.accessToken });
-      }
-    }
-    await showLeagueCommand({ from });
+  //If user says 'restart', clear state, team selection, and leagueDict, then return immediately
+  if (body.trim().toLowerCase() === "restart") {
+    clearConversationState(from);
+    clearUserChosenTeam(from);
+    // Clear leagueDict by setting to empty
+    if (userData) userData.leagueDict = {};
+    await sendWhatsApp(from, "🔄 Session restarted. Please choose your team again.");
+    await stateHandler({ from, body, originalBody, state: null, userData });
     return;
   }
-
-    //If user says 'restart', clear state, team selection, and leagueDict, then return immediately
-    if (body.trim().toLowerCase() === "restart") {
-      clearConversationState(from);
-      clearUserChosenTeam(from);
-      // Clear leagueDict by setting to empty
-      if (userData) userData.leagueDict = {};
-      await sendWhatsApp(from, "🔄 Session restarted. Please choose your team again.");
-      await stateHandler({ from, body, originalBody, state: null, userData });
-      return;
-    }
 
   if (!state) {
     if (lowerBody === "help") {
@@ -64,6 +52,15 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
           await fetchAndStoreLeagueTeamsForUser({ from, accessToken: userData.accessToken });
         }
       }
+    } else if (lowerBody === "show league") {
+      // If leagueDict is missing, try to fetch and store it
+      if (!userData?.leagueDict || Object.keys(userData.leagueDict).length === 0) {
+        if (userData?.accessToken) {
+          await fetchAndStoreLeagueTeamsForUser({ from, accessToken: userData.accessToken });
+        }
+      }
+      await showLeagueCommand({ from });
+      return;
     } else if (/^get roster( [\w\s'.-]+)?$/i.test(body)) {
       // e.g. 'get roster' or 'get roster Team Name'
       const match = body.match(/^get roster( [\w\s'.-]+)?$/i);
@@ -71,12 +68,6 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
         setConversationState(from, { type: "getRoster", teamName: match[1].trim() });
       } else {
         setConversationState(from, { type: "getRoster" });
-      }
-    } else if (/^trade with ([\w\s'.-]+)$/i.test(body)) {
-      // e.g. 'trade with Team Name'
-      const match = body.match(/^trade with ([\w\s'.-]+)$/i);
-      if (match) {
-        setConversationState(from, { type: "trade", step: "init", tradeeTeamName: match[1].trim() });
       }
     } else if (lowerBody === "propose trade") {
       setConversationState(from, { type: "trade", step: "awaitingTradeeTeam" });
