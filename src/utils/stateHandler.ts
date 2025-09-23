@@ -20,8 +20,9 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "trade":
       // Only allow trade flow to start with 'propose trade'
       if (state.step === "awaitingTradeeTeam") {
-        // Prompt for team name if not provided
-        if (!body || body.trim() === "") {
+        // Prompt for team name if not provided or if user repeats 'propose trade'
+        const input = body ? body.trim().toLowerCase() : "";
+        if (!input || input === "propose trade") {
           await sendWhatsApp(from, "Which team do you want to trade with? Please reply with the team name.");
           return;
         }
@@ -29,7 +30,7 @@ export async function stateHandler({ from, body, originalBody, state, userData }
         let validTeamName = "";
         const leagueDict = userData?.leagueDict || {};
         for (const name of Object.keys(leagueDict)) {
-          if (name.toLowerCase() === body.trim().toLowerCase()) {
+          if (name.toLowerCase() === input) {
             validTeamName = name;
             break;
           }

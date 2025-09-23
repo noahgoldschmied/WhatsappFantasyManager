@@ -68,6 +68,7 @@ router.get("/callback", async (req, res) => {
         <li><b>help</b> — Show help</li>
         <li><b>link</b> — Link Yahoo account</li>
         <li><b>show teams</b> / <b>choose team</b> — Select your team</li>
+        <li><b>show league</b> — List every team in your league</li>
         <li><b>get roster</b> / <b>get standings</b> / <b>get matchup [week N]</b> — View info</li>
         <li><b>modify lineup</b> — Change lineup (e.g. 'start Mahomes at QB week 3')</li>
         <li><b>add/drop [player name]</b> — Add/drop players</li>
@@ -76,9 +77,8 @@ router.get("/callback", async (req, res) => {
       </ul>
       <span class="trade">Trade players:</span>
       <ul>
-        <li><b>trade with [team name]</b> — Start trade proposal</li>
         <li><b>propose trade</b> — Start trade flow (will prompt for team)</li>
-        <li>Bot will guide you to select players to send/receive and add a note, then confirm before submitting.</li>
+        <li>Bot will guide you to select a team, players to send/receive, add a note, then confirm before submitting.</li>
       </ul>
       <b>Tips:</b>
       <ul>
