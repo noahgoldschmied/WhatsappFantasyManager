@@ -3,6 +3,7 @@ import { getConversationState, setConversationState, clearConversationState } fr
 import { stateHandler } from "../utils/stateHandler";
 import { getUserToken, isTokenExpired, clearUserChosenTeam } from "../services/userStorage";
 import { fetchAndStoreLeagueTeamsForUser } from "../commands/getLeague";
+import { getPendingTransactionsCommand } from "../commands/getTransactions";
 import { refreshAccessToken } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
 
@@ -24,6 +25,10 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
   }
 
   if (!state) {
+    if (lowerBody === "show transactions" || lowerBody === "pending moves") {
+      setConversationState(from, { type: "showTransactions" });
+      state = getConversationState(from);
+    }
     if (lowerBody === "help") {
       setConversationState(from, { type: "help", step: "shown" });
     } else if (lowerBody === "link") {

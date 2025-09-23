@@ -1,3 +1,35 @@
+// Get all pending transactions (waivers/trades) for a league
+export async function getPendingTransactionsYahoo(accessToken: string, leagueKey: string) {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/transactions`;
+  const response = await fetch(url, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!response.ok) throw new Error(`Failed to get league transactions: ${response.status}`);
+  const xml = await response.text();
+  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
+  // Defensive: Yahoo may return a single transaction or an array
+  const txArr = data?.fantasy_content?.league?.transactions?.transaction;
+  let txList = Array.isArray(txArr) ? txArr : txArr ? [txArr] : [];
+  // Filter for pending trades and waivers
+  txList = txList.filter(tx => tx.type === "pending_trade" || tx.type === "waiver");
+  // Map to simplified objects
+  return txList.map(tx => ({
+    type: tx.type,
+    status: tx.status,
+    note: tx.trade_note || tx.faab_bid || tx.waiver_priority,
+    players: Array.isArray(tx.players?.player)
+      ? (tx.players.player as any[]).map((p: any) => ({
+          name: p.name?.full || p.name,
+          transaction_type: p.transaction_data?.type
+        }))
+      : tx.players?.player
+      ? [{
+          name: tx.players.player.name?.full || tx.players.player.name,
+          transaction_type: tx.players.player.transaction_data?.type
+        }]
+      : []
+  }));
+}
 // Get all teams in a league
 export async function getLeagueTeams(accessToken: string, leagueKey: string) {
   const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/teams`;

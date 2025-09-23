@@ -17,6 +17,15 @@ import { getUserChosenTeam, getUserChosenLeague, getLeagueKeyFromTeamKey } from 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
   if (!state) return;
     switch (state.type) {
+    case "showTransactions":
+      if (userData?.accessToken) {
+        const { getPendingTransactionsCommand } = await import("../commands/getTransactions");
+        await getPendingTransactionsCommand({ from, accessToken: userData.accessToken });
+      } else {
+        await sendWhatsApp(from, "You must link your Yahoo account first.");
+      }
+      clearConversationState(from);
+      break;
     case "trade":
       // Only allow trade flow to start with 'propose trade'
       if (state.step === "awaitingTradeeTeam") {
