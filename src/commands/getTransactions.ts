@@ -52,6 +52,8 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
     return;
   }
   let msg = `⏳ *Pending Transactions*\n`;
+  msg += `You currently have the following pending waivers and proposed trades for your team.\n`;
+  msg += `Note: You can only view these transactions. Deleting or modifying pending moves is not supported.\n`;
   mappedTx.forEach((tx, idx) => {
     console.log(`[getPendingTransactionsCommand] Display[${idx}]: type=${tx.type}, key=${tx.transaction_key}, status=${tx.status}, players=${JSON.stringify(tx.players)}`);
     msg += `\n${idx + 1}. ${tx.type === "pending_trade" ? "Trade (Proposed)" : "Waiver"} (${tx.status || "pending"})\n`;
