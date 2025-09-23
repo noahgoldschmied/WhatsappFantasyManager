@@ -14,7 +14,14 @@ export async function getRosterCommand({
   console.log(`[getRosterCommand] from=${from} teamKey=${teamKey}`);
 
   const userTeams = getUserTeamsDict(from);
-  const teamName = userTeams ? getKeyByValue(userTeams, teamKey) : undefined;
+  let teamName: string | undefined = undefined;
+  if (userTeams) {
+    teamName = getKeyByValue(userTeams, teamKey);
+    if (!teamName) {
+      // If not found, show the teamKey itself (for opponent rosters)
+      teamName = teamKey;
+    }
+  }
 
 
   try {
@@ -40,7 +47,7 @@ export async function getRosterCommand({
       ];
     }
 
-    let msg = `📋 *Roster for team:* ${teamName ?? "Unknown"}\n\n`;
+  let msg = `📋 *Roster for team:* ${teamName ?? teamKey}\n\n`;
     msg += players.length ? players.join("\n") : "No players found.";
     await sendWhatsApp(from, msg);
   } catch (error) {

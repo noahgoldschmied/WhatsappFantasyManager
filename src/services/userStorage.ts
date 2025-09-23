@@ -1,10 +1,3 @@
-export function clearUserChosenTeam(phoneNumber: string) {
-  const user = users.get(phoneNumber);
-  if (user) {
-    user.userChosenTeam = undefined;
-    user.userChosenLeague = undefined;
-  }
-}
 // Simple in-memory user storage for demo purposes
 // In production, use a proper database
 
@@ -15,6 +8,7 @@ interface UserData {
   expiresAt: Date;
   yahooUserId?: string;
   userTeams?: Record<string, string>; // teamName -> teamKey
+  leagueDict?: Record<string, string>; // teamName -> teamKey for all teams in league
   userChosenTeam?: string;
   userChosenLeague?: string;
 }
@@ -96,6 +90,7 @@ export function setUserChosenTeam(phoneNumber: string, teamKey: string) {
   if (user) {
     user.userChosenTeam = teamKey;
     user.userChosenLeague = getLeagueKeyFromTeamKey(teamKey);
+    user.leagueDict = undefined; // Clear leagueDict when team changes
   }
 }
 
@@ -112,4 +107,27 @@ export function getUserChosenLeague(phoneNumber: string): string {
 export function getLeagueKeyFromTeamKey(teamKey: string): string {
   // For keys like '423.l.12345.t.7'
   return teamKey.split('.t.')[0];
+}
+
+export function clearUserChosenTeam(phoneNumber: string) {
+  const user = users.get(phoneNumber);
+  if (user) {
+    user.userChosenTeam = undefined;
+    user.userChosenLeague = undefined;
+    user.leagueDict = undefined;
+  }
+}
+
+// Set the league dictionary (teamName -> teamKey) for a user
+export function setLeagueDict(phoneNumber: string, leagueDict: Record<string, string>) {
+  const user = users.get(phoneNumber);
+  if (user) {
+    user.leagueDict = leagueDict;
+  }
+}
+
+// Get the league dictionary for a user
+export function getLeagueDict(phoneNumber: string): Record<string, string> | undefined {
+  const user = users.get(phoneNumber);
+  return user?.leagueDict;
 }

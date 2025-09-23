@@ -59,13 +59,25 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       if (state.step === "awaitingConfirmation" && state.tradeeTeamName && state.sendPlayers && state.receivePlayers) {
         const lower = body.trim().toLowerCase();
         if (lower === "yes") {
-          // Find tradee team key from name
-          const userTeams = userData?.userTeams || {};
+          // Find tradee team key from leagueDict, fallback to userTeams
           let tradeeTeamKey = "";
-          for (const [name, key] of Object.entries(userTeams)) {
-            if (name.toLowerCase() === state.tradeeTeamName.toLowerCase()) {
-              tradeeTeamKey = String(key);
-              break;
+          const leagueDict = userData?.leagueDict || {};
+          if (leagueDict && Object.keys(leagueDict).length > 0) {
+            for (const [name, key] of Object.entries(leagueDict)) {
+              if (name.toLowerCase() === state.tradeeTeamName.toLowerCase()) {
+                tradeeTeamKey = String(key);
+                break;
+              }
+            }
+          }
+          // Fallback to userTeams if not found in leagueDict
+          if (!tradeeTeamKey) {
+            const userTeams = userData?.userTeams || {};
+            for (const [name, key] of Object.entries(userTeams)) {
+              if (name.toLowerCase() === state.tradeeTeamName.toLowerCase()) {
+                tradeeTeamKey = String(key);
+                break;
+              }
             }
           }
           if (!tradeeTeamKey) {
@@ -128,11 +140,38 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "getRoster":
       if (getUserChosenTeam(from) === "") {
         await chooseTeamCommand({ from });
-        setConversationState(from, { type: "getRoster" });
+        setConversationState(from, { type: "getRoster", teamName: state?.teamName });
       } else {
-        const userTeamKey = getUserChosenTeam(from)
-        await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey: userTeamKey})
-        clearConversationState(from)
+        let teamKey = getUserChosenTeam(from);
+        // If teamName is provided, look up key from leagueDict, fallback to userTeams
+        if (state?.teamName) {
+          const leagueDict = userData?.leagueDict || {};
+          if (leagueDict && Object.keys(leagueDict).length > 0) {
+            for (const [name, key] of Object.entries(leagueDict)) {
+              if (name.toLowerCase() === state.teamName.toLowerCase()) {
+                teamKey = String(key);
+                break;
+              }
+            }
+          }
+          // Fallback to userTeams if not found in leagueDict
+          if (!teamKey) {
+            const userTeams = userData?.userTeams || {};
+            for (const [name, key] of Object.entries(userTeams)) {
+              if (name.toLowerCase() === state.teamName.toLowerCase()) {
+                teamKey = String(key);
+                break;
+              }
+            }
+          }
+          if (!teamKey) {
+            await sendWhatsApp(from, `Could not find team: ${state.teamName}`);
+            clearConversationState(from);
+            return;
+          }
+        }
+        await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey });
+        clearConversationState(from);
       }
       break;
     case "getStandings":

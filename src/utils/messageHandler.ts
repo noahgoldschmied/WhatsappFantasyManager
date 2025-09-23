@@ -1,6 +1,8 @@
+import { showLeagueCommand } from "../commands/showLeague";
 import { getConversationState, setConversationState, clearConversationState } from "../utils/conversationState";
 import { stateHandler } from "../utils/stateHandler";
 import { getUserToken, isTokenExpired, clearUserChosenTeam } from "../services/userStorage";
+import { fetchAndStoreLeagueTeamsForUser } from "../commands/getLeague";
 import { refreshAccessToken } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
 
@@ -10,10 +12,24 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
   let state = getConversationState(from);
   console.log(`[messageHandler] from=${from} state=`, state);
 
-    //If user says 'restart', clear state and team selection, then return immediately
+  // Show all teams in the user's league
+  if (lowerBody === "show league") {
+    // If leagueDict is missing, try to fetch and store it
+    if (!userData?.leagueDict || Object.keys(userData.leagueDict).length === 0) {
+      if (userData?.accessToken) {
+        await fetchAndStoreLeagueTeamsForUser({ from, accessToken: userData.accessToken });
+      }
+    }
+    await showLeagueCommand({ from });
+    return;
+  }
+
+    //If user says 'restart', clear state, team selection, and leagueDict, then return immediately
     if (body.trim().toLowerCase() === "restart") {
       clearConversationState(from);
       clearUserChosenTeam(from);
+      // Clear leagueDict by setting to empty
+      if (userData) userData.leagueDict = {};
       await sendWhatsApp(from, "🔄 Session restarted. Please choose your team again.");
       await stateHandler({ from, body, originalBody, state: null, userData });
       return;
@@ -43,9 +59,19 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
         setConversationState(from, { type: "chooseTeam", step: "noTeams" });
       } else {
         setConversationState(from, { type: "chooseTeam", step: "shown"})
-      } 
-    } else if (lowerBody === "get roster") {
-      setConversationState(from, { type: "getRoster" });
+        // After showing teams, fetch and store leagueDict for user's chosen league
+        if (userData.accessToken) {
+          await fetchAndStoreLeagueTeamsForUser({ from, accessToken: userData.accessToken });
+        }
+      }
+    } else if (/^get roster( [\w\s'.-]+)?$/i.test(body)) {
+      // e.g. 'get roster' or 'get roster Team Name'
+      const match = body.match(/^get roster( [\w\s'.-]+)?$/i);
+      if (match && match[1]) {
+        setConversationState(from, { type: "getRoster", teamName: match[1].trim() });
+      } else {
+        setConversationState(from, { type: "getRoster" });
+      }
     } else if (/^trade with ([\w\s'.-]+)$/i.test(body)) {
       // e.g. 'trade with Team Name'
       const match = body.match(/^trade with ([\w\s'.-]+)$/i);

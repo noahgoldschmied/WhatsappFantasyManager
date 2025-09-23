@@ -7,6 +7,7 @@ export async function helpCommand({ from }: { from: string }) {
 - help — Show help
 - link — Link Yahoo account
 - show teams / choose team — Select your team
+- show league — List every team in your league
 - get roster / get standings / get matchup [week N] — View info
 - modify lineup — Change lineup (e.g. 'start Mahomes at QB week 3')
 - add/drop [player name] — Add/drop players

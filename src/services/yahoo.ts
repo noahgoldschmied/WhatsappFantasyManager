@@ -1,3 +1,13 @@
+// Get all teams in a league
+export async function getLeagueTeams(accessToken: string, leagueKey: string) {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/teams`;
+  const response = await fetch(url, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!response.ok) throw new Error(`Failed to get league teams: ${response.status}`);
+  const xml = await response.text();
+  return await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
+}
 // Post a trade transaction (pending_trade)
 export async function postTradeYahoo({ accessToken, leagueKey, traderTeamKey, tradeeTeamKey, traderPlayerKeys, tradeePlayerKeys, tradeNote }: {
   accessToken: string;
