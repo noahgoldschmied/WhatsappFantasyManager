@@ -5,7 +5,7 @@ import { sendWhatsApp } from "../services/twilio";
 import { getPlayerInfoByName } from "../utils/getPlayer";
 
 // Add a player to a team (business logic + messaging)
-export async function addPlayer({ accessToken, leagueKey, teamKey, playerName, from }: {
+export async function addPlayer({ accessToken, leagueKey, teamKey, playerName, from, isWaiverClaim }: {
   accessToken: string;
   leagueKey: string;
   teamKey: string;
