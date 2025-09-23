@@ -24,7 +24,7 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
     (tx.type === "pending_trade" && tx.status === "proposed")
   );
   console.log(`[getPendingTransactionsCommand] Filtered transactions:`, JSON.stringify(transactions, null, 2));
-  // Map to simplified objects, include transaction_key
+  // Map to simplified objects, include transaction_key and transaction_data for trade logic
   const mappedTx = transactions.map(tx => ({
     transaction_key: tx.transaction_key,
     type: tx.type,
@@ -33,12 +33,14 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
     players: Array.isArray(tx.players?.player)
       ? (tx.players.player as any[]).map((p: any) => ({
           name: p.name?.full || p.name,
-          transaction_type: p.transaction_data?.type
+          transaction_type: p.transaction_data?.type,
+          transaction_data: p.transaction_data
         }))
       : tx.players?.player
       ? [{
           name: tx.players.player.name?.full || tx.players.player.name,
-          transaction_type: tx.players.player.transaction_data?.type
+          transaction_type: tx.players.player.transaction_data?.type,
+          transaction_data: tx.players.player.transaction_data
         }]
       : []
   }));
@@ -57,14 +59,30 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
   msg += `Note: You can only view these transactions. Deleting or modifying pending moves is not supported.\n`;
   mappedTx.forEach((tx, idx) => {
     console.log(`[getPendingTransactionsCommand] Display[${idx}]: type=${tx.type}, key=${tx.transaction_key}, status=${tx.status}, players=${JSON.stringify(tx.players)}`);
-    msg += `\n${idx + 1}. ${tx.type === "pending_trade" ? "Trade (Proposed)" : "Waiver"} (${tx.status || "pending"})\n`;
-    msg += `   Transaction Key: ${tx.transaction_key}\n`;
-    if (tx.players && tx.players.length) {
-      tx.players.forEach((p) => {
-        msg += `   - ${p.name} (${p.transaction_type})\n`;
-      });
+    if (tx.type === "waiver") {
+      msg += `\n${idx + 1}. Waiver\n`;
+      const added = tx.players.filter(p => p.transaction_type === "add");
+      const dropped = tx.players.filter(p => p.transaction_type === "drop");
+      if (added.length) {
+        msg += `   Joining your team: ${added.map(p => p.name).join(", ")}\n`;
+      }
+      if (dropped.length) {
+        msg += `   Leaving your team: ${dropped.map(p => p.name).join(", ")}\n`;
+      }
+      if (tx.note) msg += `   Waiver priority: ${tx.note}\n`;
+    } else if (tx.type === "pending_trade") {
+      msg += `\n${idx + 1}. Trade\n`;
+      // For trades, show who is joining/leaving your team using transaction_data
+      const received = tx.players.filter(p => p.transaction_data && p.transaction_data.destination_team_key === teamKey);
+      const sent = tx.players.filter(p => p.transaction_data && p.transaction_data.source_team_key === teamKey);
+      if (received.length) {
+        msg += `   If accepted, joining your team: ${received.map(p => p.name).join(", ")}\n`;
+      }
+      if (sent.length) {
+        msg += `   If accepted, leaving your team: ${sent.map(p => p.name).join(", ")}\n`;
+      }
+      if (tx.note) msg += `   Trade note: ${tx.note}\n`;
     }
-    if (tx.note) msg += `   Note: ${tx.note}\n`;
   });
   await sendWhatsApp(from, msg);
 }
