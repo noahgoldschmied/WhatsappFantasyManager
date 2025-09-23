@@ -1,8 +1,6 @@
-// Message handler: assigns/updates state based on user input
-// State handler: processes logic based on current state
 import { getConversationState, setConversationState, clearConversationState } from "../utils/conversationState";
 import { stateHandler } from "../utils/stateHandler";
-import { getUserChosenTeam, getUserToken, isTokenExpired } from "../services/userStorage";
+import { getUserToken, isTokenExpired } from "../services/userStorage";
 import { refreshAccessToken } from "../services/yahoo";
 
 export async function conversationRouter({ from, body, originalBody }: { from: string, body: string, originalBody: string }) {
@@ -11,16 +9,14 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
   let state = getConversationState(from);
   console.log(`[messageHandler] from=${from} state=`, state);
 
-    // 0. If user says 'restart', clear state and return immediately
+    //If user says 'restart', clear state and return immediately
     if (body.trim().toLowerCase() === "restart") {
       clearConversationState(from);
       await stateHandler({ from, body, originalBody, state: null, userData });
       return;
     }
 
-    // 1. Message handler: assign/update state based on input
   if (!state) {
-    // help
     if (lowerBody === "help") {
       setConversationState(from, { type: "help", step: "shown" });
     } else if (lowerBody === "link") {
@@ -47,6 +43,8 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       } 
     } else if (lowerBody === "get roster") {
       setConversationState(from, { type: "getRoster" });
+    } else if (lowerBody === "get matchup") {
+      setConversationState(from, { type: "getScoreboard" });
     } else if (lowerBody === "get standings") {
       setConversationState(from, { type: "getStandings" });
     } else if (lowerBody === "modify lineup") {
@@ -87,7 +85,5 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
     }
     state = getConversationState(from);
   }
-
-  // 2. State handler: process logic for current state
   await stateHandler({ from, body, originalBody, state, userData });
 }

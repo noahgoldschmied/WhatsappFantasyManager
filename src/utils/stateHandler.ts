@@ -1,4 +1,3 @@
-// State handler: executes logic based on current state
 import { clearConversationState, setConversationState } from "./conversationState";
 import { getRosterCommand } from "../commands/getRoster";
 import { showTeamsCommand } from "../commands/showTeams";
@@ -6,20 +5,18 @@ import { helpCommand } from "../commands/help";
 import { linkCommand } from "../commands/link";
 import { authRequiredCommand } from "../commands/authRequired";
 import { tokenExpiredCommand } from "../commands/tokenExpired";
-// Removed old dropPlayerCommand and confirmDropCommand imports
 import { defaultResponseCommand } from "../commands/defaultResponse";
 import { modifyLineupCommand } from "../commands/modifyLineup";
 import { addPlayer, dropPlayer, addDropPlayer } from "../commands/rosterMoves";
 import { getLeagueStandingsCommand } from "../commands/getStandings";
-
+import { getScoreboardCommand } from "../commands/getScoreboard";
 import { sendWhatsApp } from "../services/twilio";
 import { chooseTeamCommand } from "../commands/chooseTeam";
-import { get } from "http";
 import { getUserChosenTeam, getUserChosenLeague, getLeagueKeyFromTeamKey } from "../services/userStorage";
 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
   if (!state) return;
-  switch (state.type) {
+    switch (state.type) {
     case "help":
       await helpCommand({ from });
       clearConversationState(from);
@@ -182,6 +179,15 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           }
           // Stay in modifyLineup state for further changes
         }
+      }
+      break;
+    case "getScoreboard":
+      if (getUserChosenTeam(from) === "") {
+        await chooseTeamCommand({ from });
+        setConversationState(from, { type: "getScoreboard" });
+      } else {
+        await getScoreboardCommand({ from, accessToken: userData?.accessToken });
+        clearConversationState(from);
       }
       break;
     default:
