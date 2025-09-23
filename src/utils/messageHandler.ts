@@ -44,7 +44,8 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       }
       // Do not return; let stateHandler handle the flow
     }
-    if (lowerBody === "show transactions" || lowerBody === "pending moves") {
+    // Robustly match transaction listing commands
+    if (/\b(show|list|pending) (transactions|moves)\b/i.test(lowerBody)) {
       setConversationState(from, { type: "showTransactions" });
       state = getConversationState(from);
     }
