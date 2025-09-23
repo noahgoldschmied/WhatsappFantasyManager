@@ -184,9 +184,9 @@ export async function stateHandler({ from, body, originalBody, state, userData }
     case "getScoreboard":
       if (getUserChosenTeam(from) === "") {
         await chooseTeamCommand({ from });
-        setConversationState(from, { type: "getScoreboard" });
+        setConversationState(from, { type: "getScoreboard", week: state?.week });
       } else {
-        await getScoreboardCommand({ from, accessToken: userData?.accessToken });
+        await getScoreboardCommand({ from, accessToken: userData?.accessToken, week: state?.week });
         clearConversationState(from);
       }
       break;

@@ -230,8 +230,11 @@ export async function modifyLineup(params: {
   return true;
 }
 
-export async function getScoreboardYahoo({ accessToken, leagueKey }: { accessToken: string, leagueKey: string }) {
-  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/scoreboard`;
+export async function getScoreboardYahoo({ accessToken, leagueKey, week }: { accessToken: string, leagueKey: string, week?: number }) {
+  let url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/scoreboard`;
+  if (week) {
+    url += `;week=${week}`;
+  }
   const response = await fetch(url, {
     headers: { "Authorization": `Bearer ${accessToken}` }
   });

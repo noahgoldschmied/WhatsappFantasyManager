@@ -43,8 +43,22 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       } 
     } else if (lowerBody === "get roster") {
       setConversationState(from, { type: "getRoster" });
-    } else if (lowerBody === "get matchup") {
-      setConversationState(from, { type: "getScoreboard" });
+    } else if (lowerBody.startsWith("get matchup")) {
+      // Parse week if present, e.g. "get matchup week 2"
+      const weekMatch = lowerBody.match(/get matchup(?: week (\d+))?/);
+      if (weekMatch && weekMatch[1]) {
+        setConversationState(from, { type: "getScoreboard", week: parseInt(weekMatch[1], 10) });
+      } else {
+        setConversationState(from, { type: "getScoreboard" });
+      }
+    } else if (lowerBody.startsWith("get scoreboard")) {
+      // Parse week if present, e.g. "get scoreboard week 5"
+      const weekMatch = lowerBody.match(/get scoreboard(?: week (\d+))?/);
+      if (weekMatch && weekMatch[1]) {
+        setConversationState(from, { type: "getScoreboard", week: parseInt(weekMatch[1], 10) });
+      } else {
+        setConversationState(from, { type: "getScoreboard" });
+      }
     } else if (lowerBody === "get standings") {
       setConversationState(from, { type: "getStandings" });
     } else if (lowerBody === "modify lineup") {
