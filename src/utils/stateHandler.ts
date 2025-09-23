@@ -17,6 +17,30 @@ import { getUserChosenTeam, getUserChosenLeague, getLeagueKeyFromTeamKey } from 
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
   if (!state) return;
   switch (state.type) {
+    case "waiverClaimPrompt": {
+      const lower = body.trim().toLowerCase();
+      if (lower === "yes") {
+        // User wants to put in a waiver claim
+        const teamKey = getUserChosenTeam(from);
+        await addPlayer({
+          accessToken: userData?.accessToken,
+          leagueKey: state.leagueKey,
+          teamKey,
+          playerName: state.playerName,
+          from,
+          isWaiverClaim: true
+        });
+        clearConversationState(from);
+      } else if (lower === "no") {
+        await sendWhatsApp(from, "Waiver claim cancelled.");
+        clearConversationState(from);
+      } else {
+        await sendWhatsApp(from, "Reply 'yes' to put in a waiver claim or 'no' to cancel.");
+      }
+      return;
+    }
+  if (!state) return;
+  switch (state.type) {
     case "modifyTransaction": {
       const { getPendingTransactions } = await import("../services/userStorage");
       const txList = getPendingTransactions(from);
@@ -304,14 +328,34 @@ export async function stateHandler({ from, body, originalBody, state, userData }
         if (lower === "yes") {
           const teamKey = getUserChosenTeam(from);
           const leagueKey = getLeagueKeyFromTeamKey(teamKey);
-          await addPlayer({
+          // Check if player is on waivers
+          const { checkAndPromptWaiverClaim } = require("../commands/waiverCheck");
+          const waiverResult = await checkAndPromptWaiverClaim({
+            from,
             accessToken: userData?.accessToken,
             leagueKey,
-            teamKey,
-            playerName: state.addPlayer,
-            from
+            playerName: state.addPlayer
           });
-          clearConversationState(from);
+          if (!waiverResult.found) {
+            await sendWhatsApp(from, `❌ Could not find player: ${state.addPlayer}`);
+            clearConversationState(from);
+            return;
+          }
+          if (waiverResult.isWaiver) {
+            setConversationState(from, { type: "addPlayerWaiverPrompt", addPlayer: state.addPlayer, leagueKey, teamKey, playerKey: waiverResult.playerKey });
+            await sendWhatsApp(from, `${state.addPlayer} is currently on waivers. Would you like to put in a claim? Reply 'yes' to claim or 'no' to cancel.`);
+            return;
+          } else {
+            await addPlayer({
+              accessToken: userData?.accessToken,
+              leagueKey,
+              teamKey,
+              playerName: state.addPlayer,
+              from
+            });
+            clearConversationState(from);
+            return;
+          }
         } else if (lower === "no") {
           clearConversationState(from);
         } else if (!state.confirmPromptSent) {
@@ -319,6 +363,27 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           await sendWhatsApp(from, `You want to add ${state.addPlayer}. Reply 'yes' to confirm or 'no' to cancel.`);
         }
         // If prompt already sent and not yes/no, do nothing
+      }
+      break;
+    case "addPlayerWaiverPrompt":
+      {
+        const lower = body.trim().toLowerCase();
+        if (lower === "yes") {
+          await addPlayer({
+            accessToken: userData?.accessToken,
+            leagueKey: state.leagueKey,
+            teamKey: state.teamKey,
+            playerName: state.addPlayer,
+            from,
+            isWaiverClaim: true
+          });
+          clearConversationState(from);
+        } else if (lower === "no") {
+          await sendWhatsApp(from, "Waiver claim cancelled.");
+          clearConversationState(from);
+        } else {
+          await sendWhatsApp(from, "Reply 'yes' to put in a waiver claim or 'no' to cancel.");
+        }
       }
       break;
     case "dropPlayer":
@@ -410,6 +475,7 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       break;
     default:
       await sendWhatsApp(from, "❓ I didn't understand that. Send 'help' to see available commands.");
+  }
       clearConversationState(from);
       break;
   }

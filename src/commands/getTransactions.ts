@@ -14,16 +14,16 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
     return;
   }
   let msg = `⏳ *Pending Transactions*\n`;
-  for (const tx of transactions) {
-    msg += `\n• ${tx.type === "pending_trade" ? "Trade" : "Waiver"} (${tx.status || "pending"})\n`;
+  transactions.forEach((tx, idx) => {
+    msg += `\n${idx + 1}. ${tx.type === "pending_trade" ? "Trade" : "Waiver"} (${tx.status || "pending"})\n`;
     msg += `   Transaction Key: ${tx.transaction_key}\n`;
     if (tx.players && tx.players.length) {
-      for (const p of tx.players) {
+      tx.players.forEach((p) => {
         msg += `   - ${p.name} (${p.transaction_type})\n`;
-      }
+      });
     }
     if (tx.note) msg += `   Note: ${tx.note}\n`;
-  }
-  msg += `\nTo delete or modify a transaction, use:\n  delete transaction [transactionKey]\n  modify transaction [transactionKey] [xml]\n`;
+  });
+  msg += `\nTo delete or modify a transaction, use:\n  delete transaction [number]\n  modify transaction [number]\n(Where [number] is the transaction's number in this list.)\n`;
   await sendWhatsApp(from, msg);
 }

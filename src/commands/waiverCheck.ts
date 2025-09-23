@@ -11,14 +11,8 @@ export async function checkAndPromptWaiverClaim({ from, accessToken, leagueKey, 
 }) {
   const playerInfo = await getPlayerByName({ accessToken, leagueKey, playerName });
   if (!playerInfo?.player_key) {
-    await sendWhatsApp(from, `Could not find player: ${playerName}`);
-    return;
+    return { found: false };
   }
   const isWaiver = await isPlayerOnWaivers({ accessToken, leagueKey, playerKey: playerInfo.player_key });
-  if (isWaiver) {
-    await sendWhatsApp(from, `${playerName} is currently on waivers. Would you like to put in a claim? Reply 'yes' to claim or 'no' to cancel.`);
-    // You can set a state here to handle the user's reply for claim
-  } else {
-    await sendWhatsApp(from, `${playerName} is not on waivers and can be added directly.`);
-  }
+  return { found: true, isWaiver, playerKey: playerInfo.player_key };
 }

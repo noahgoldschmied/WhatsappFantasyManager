@@ -11,6 +11,7 @@ export async function addPlayer({ accessToken, leagueKey, teamKey, playerName, f
   teamKey: string;
   playerName: string;
   from: string;
+  isWaiverClaim?: boolean;
 }) {
   try {
     const player = await getPlayerInfoByName({ accessToken, leagueKey, playerName });
@@ -18,8 +19,9 @@ export async function addPlayer({ accessToken, leagueKey, teamKey, playerName, f
       await sendWhatsApp(from, `❌ Could not find player: ${playerName}`);
       return false;
     }
+    // If isWaiverClaim is true, you could add custom logic here (e.g. log, special handling)
     await addPlayerYahoo({ accessToken, leagueKey, teamKey, playerKey: player.player_key });
-    await sendWhatsApp(from, `✅ Player ${playerName} added successfully!`);
+    await sendWhatsApp(from, `✅ Player ${playerName} ${isWaiverClaim ? 'waiver claim submitted!' : 'added successfully!'}`);
     return true;
   } catch (error) {
     console.error("[addPlayer] Error:", error);

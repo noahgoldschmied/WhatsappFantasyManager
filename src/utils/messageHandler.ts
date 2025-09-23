@@ -135,10 +135,6 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       const match = body.match(/^add ([\w\s'.-]+)$/i);
       if (match && match[1].trim().toLowerCase() !== "player") {
         const addPlayer = match[1].trim();
-        // Check if player is on waivers and prompt for claim if needed
-        if (userData?.accessToken && userData?.userChosenLeague) {
-          await checkAndPromptWaiverClaim({ from, accessToken: userData.accessToken, leagueKey: userData.userChosenLeague, playerName: addPlayer });
-        }
         setConversationState(from, { type: "addPlayer", step: "awaitingConfirmation", addPlayer });
       }
     } else if (/^drop ([\w'.-]+ ?)+$/i.test(body)) {
