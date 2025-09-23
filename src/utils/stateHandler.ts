@@ -39,8 +39,6 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       }
       return;
     }
-  if (!state) return;
-  switch (state.type) {
     case "modifyTransaction": {
       const { getPendingTransactions } = await import("../services/userStorage");
       const txList = getPendingTransactions(from);
@@ -148,8 +146,8 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           if (name.toLowerCase() === input) {
             validTeamName = name;
             break;
-          }
         }
+      }
         if (!validTeamName) {
           await sendWhatsApp(from, `Team '${body.trim()}' not found. Please reply with a valid team name from your league.`);
           return;
@@ -474,9 +472,8 @@ export async function stateHandler({ from, body, originalBody, state, userData }
       }
       break;
     default:
-      await sendWhatsApp(from, "❓ I didn't understand that. Send 'help' to see available commands.");
-  }
-      clearConversationState(from);
-      break;
+    await sendWhatsApp(from, "❓ I didn't understand that. Send 'help' to see available commands.");
+    clearConversationState(from);
+    break;
   }
 }
