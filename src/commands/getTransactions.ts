@@ -9,6 +9,9 @@ export async function getPendingTransactionsCommand({ from, accessToken }: { fro
     return;
   }
   const transactions = await getPendingTransactionsYahoo(accessToken, leagueKey);
+  // Update in-memory state for downstream flows
+  const { setPendingTransactions } = await import("../services/userStorage");
+  setPendingTransactions(from, transactions);
   if (!transactions || transactions.length === 0) {
     await sendWhatsApp(from, "No pending waivers or trades found for your team.");
     return;
