@@ -1,8 +1,8 @@
 import { getAvailablePlayersYahoo } from "../services/yahoo";
 import { sendWhatsApp } from "../services/twilio";
 
-export async function getAvailablePlayersCommand({ from, accessToken, leagueKey }: { from: string; accessToken: string; leagueKey: string }) {
-  const players = await getAvailablePlayersYahoo(accessToken, leagueKey);
+export async function getAvailablePlayersCommand({ from, accessToken, leagueKey, position }: { from: string; accessToken: string; leagueKey: string; position?: string }) {
+  const players = await getAvailablePlayersYahoo(accessToken, leagueKey, position);
   if (!players || players.length === 0) {
     await sendWhatsApp(from, "No available free agents found in your league.");
     return;

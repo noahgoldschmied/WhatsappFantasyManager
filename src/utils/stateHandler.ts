@@ -24,7 +24,13 @@ export async function stateHandler({ from, body, originalBody, state, userData }
           await sendWhatsApp(from, "You must choose your team first.");
         } else {
           const { getAvailablePlayersCommand } = await import("../commands/getAvailable");
-          await getAvailablePlayersCommand({ from, accessToken: userData.accessToken, leagueKey });
+          // Parse position from body if present (e.g., 'show available QB')
+          let position: string | undefined = undefined;
+          const match = body.trim().match(/^show available\s+(\w+)$/i);
+          if (match && match[1]) {
+            position = match[1].toUpperCase();
+          }
+          await getAvailablePlayersCommand({ from, accessToken: userData.accessToken, leagueKey, position });
         }
       } else {
         await sendWhatsApp(from, "You must link your Yahoo account first.");

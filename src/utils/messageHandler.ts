@@ -46,9 +46,12 @@ export async function conversationRouter({ from, body, originalBody }: { from: s
       } catch (error) {
         setConversationState(from, { type: "tokenExpired", step: "shown" });
       }
-    } else if (lowerBody === "show available") {
+    } else if (/^show available( \w+)?$/i.test(lowerBody)) {
+      // e.g. 'show available' or 'show available QB'
       setConversationState(from, { type: "showAvailable" });
       state = getConversationState(from);
+      // Pass full body to stateHandler for position parsing
+      body = body;
     } else if (lowerBody === "show teams") {
       setConversationState(from, { type: "showTeams", step: "shown" });
     } else if (lowerBody === "choose team") {
