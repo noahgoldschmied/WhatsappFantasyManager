@@ -1,6 +1,7 @@
 // Get available free agents in a league
 export async function getAvailablePlayersYahoo(accessToken: string, leagueKey: string) {
-  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/players;status=FA`;
+  // Use sort=AR for actual rank
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/players;status=FA;sort=AR`;
   const response = await fetch(url, {
     headers: { "Authorization": `Bearer ${accessToken}` }
   });
