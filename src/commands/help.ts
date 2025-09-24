@@ -1,5 +1,10 @@
 import { sendWhatsApp } from "../services/twilio";
 
+/**
+ * HELP COMMAND
+ * Displays comprehensive usage instructions for the WhatsApp Fantasy Football bot
+ */
+
 export async function helpCommand({ from }: { from: string }) {
   const helpText = [
     '🤖 *Boardy WhatsApp Bot Help*',

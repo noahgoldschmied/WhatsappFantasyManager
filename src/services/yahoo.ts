@@ -1,24 +1,8 @@
-// Get available free agents in a league
-export async function getAvailablePlayersYahoo(accessToken: string, leagueKey: string, position?: string) {
-  // Use sort=AR for actual rank, and filter by position if provided
-  let url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/players;status=FA;sort=AR`;
-  if (position) {
-    url += `;position=${encodeURIComponent(position)}`;
-  }
-  const response = await fetch(url, {
-    headers: { "Authorization": `Bearer ${accessToken}` }
-  });
-  if (!response.ok) throw new Error(`Failed to get available players: ${response.status}`);
-  const xml = await response.text();
-  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
-  const players = data?.fantasy_content?.league?.players?.player;
-  if (!players) return [];
-  return Array.isArray(players) ? players : [players];
-}
-
 import { parseStringPromise } from "xml2js";
-// Yahoo Fantasy API client
 
+// Yahoo Fantasy Sports API client - handles all interactions with Yahoo's Fantasy API
+
+// Type definitions for Yahoo API responses
 interface TokenResponse {
   access_token: string;
   token_type: string;
@@ -34,6 +18,10 @@ interface YahooTokenData {
   tokenType: string;
   scope: string;
 }
+
+// =============================================================================
+// AUTHENTICATION & TOKEN MANAGEMENT
+// =============================================================================
 
 // Exchange OAuth code for access token
 export async function exchangeCodeForToken(code: string): Promise<YahooTokenData> {
@@ -176,11 +164,24 @@ export async function getLeagueStandings(accessToken: string, leagueKey: string)
   return jsonResponse;
 }
 
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+
+// Helper function to convert Yahoo's XML responses to JSON
 async function XMLtoJSON(response: Response) {
   const text = await response.text();
   const result = await parseStringPromise(text, { explicitArray: false, mergeAttrs: true });
   return result;
 }
+
+// =============================================================================
+// LEAGUE & TEAM DATA
+// =============================================================================
+
+// =============================================================================
+// PLAYER SEARCH & INFORMATION
+// =============================================================================
 
 // Search for a player by name in a league and return player info (including player_key)
 export async function getPlayerByName({ accessToken, leagueKey, playerName }: {
@@ -207,6 +208,47 @@ export async function getPlayerByName({ accessToken, leagueKey, playerName }: {
   }
   return players;
 }
+
+// Get available free agents in a league with optional position filtering
+export async function getAvailablePlayersYahoo(accessToken: string, leagueKey: string, position?: string) {
+  // Use sort=AR for actual rank, and filter by position if provided
+  let url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/players;status=FA;sort=AR`;
+  if (position) {
+    url += `;position=${encodeURIComponent(position)}`;
+  }
+  const response = await fetch(url, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!response.ok) throw new Error(`Failed to get available players: ${response.status}`);
+  const xml = await response.text();
+  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
+  const players = data?.fantasy_content?.league?.players?.player;
+  if (!players) return [];
+  return Array.isArray(players) ? players : [players];
+}
+
+// Check if a player is on waivers in a league
+export async function isPlayerOnWaivers({ accessToken, leagueKey, playerKey }: {
+  accessToken: string;
+  leagueKey: string;
+  playerKey: string;
+}): Promise<boolean> {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/players;player_keys=${playerKey}`;
+  const response = await fetch(url, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!response.ok) throw new Error(`Failed to get player info: ${response.status}`);
+  const xml = await response.text();
+  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
+  const player = data?.fantasy_content?.league?.players?.player;
+  // Yahoo returns player status as 'status' - 'W' means on waivers
+  return player?.status === "W";
+}
+
+// =============================================================================
+// LINEUP MANAGEMENT
+// =============================================================================
+
 // Modify team lineup (PUT request)
 export async function modifyLineup(params: {
   accessToken: string;
@@ -248,6 +290,7 @@ export async function modifyLineup(params: {
   return true;
 }
 
+// Get league scoreboard for a specific week
 export async function getScoreboardYahoo({ accessToken, leagueKey, week }: { accessToken: string, leagueKey: string, week?: number }) {
   let url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/scoreboard`;
   if (week) {
@@ -260,6 +303,11 @@ export async function getScoreboardYahoo({ accessToken, leagueKey, week }: { acc
   const xml = await response.text();
   return await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
 }
+
+// =============================================================================
+// ROSTER TRANSACTIONS (ADD/DROP/WAIVER)
+// =============================================================================
+
 // Add a player to a team (Yahoo API)
 export async function addPlayerYahoo({ accessToken, leagueKey, teamKey, playerKey }: {
   accessToken: string;
@@ -381,23 +429,9 @@ export async function addDropPlayerYahoo({ accessToken, leagueKey, teamKey, addP
   return true;
 }
 
-// Check if a player is on waivers in a league
-export async function isPlayerOnWaivers({ accessToken, leagueKey, playerKey }: {
-  accessToken: string;
-  leagueKey: string;
-  playerKey: string;
-}): Promise<boolean> {
-  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/players;player_keys=${playerKey}`;
-  const response = await fetch(url, {
-    headers: { "Authorization": `Bearer ${accessToken}` }
-  });
-  if (!response.ok) throw new Error(`Failed to get player info: ${response.status}`);
-  const xml = await response.text();
-  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
-  const player = data?.fantasy_content?.league?.players?.player;
-  // Yahoo returns player status as 'status'
-  return player?.status === "W"; // 'W' means on waivers
-}
+// =============================================================================
+// TRANSACTION MANAGEMENT (DELETE/MODIFY)
+// =============================================================================
 
 // Delete a transaction (waiver or trade)
 export async function deleteTransactionYahoo({ accessToken, transactionKey }: {
@@ -431,6 +465,11 @@ export async function modifyTransactionYahoo({ accessToken, transactionKey, upda
   if (!response.ok) throw new Error(`Failed to modify transaction: ${response.status}`);
   return true;
 }
+
+// =============================================================================
+// PENDING TRANSACTIONS & LEAGUE QUERIES
+// =============================================================================
+
 // Get all pending transactions (waivers/trades) for a league
 export async function getPendingTransactionsYahoo(accessToken: string, teamKey: string, leagueKey?: string) {
   // Use Yahoo API filters for waivers and pending trades
@@ -470,6 +509,11 @@ export async function getLeagueTeams(accessToken: string, leagueKey: string) {
   const xml = await response.text();
   return await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
 }
+
+// =============================================================================
+// TRADE FUNCTIONALITY
+// =============================================================================
+
 // Post a trade transaction (pending_trade)
 export async function postTradeYahoo({ accessToken, leagueKey, traderTeamKey, tradeeTeamKey, traderPlayerKeys, tradeePlayerKeys, tradeNote }: {
   accessToken: string;

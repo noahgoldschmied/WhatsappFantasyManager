@@ -1,21 +1,23 @@
 import { Router } from "express";
 import { exchangeCodeForToken } from "../services/yahoo";
 import { storeUserToken, getPhoneNumberFromLinkCode } from "../services/userStorage";
+import * as fs from "fs";
+import * as path from "path";
 
 const router = Router();
 
-// Yahoo OAuth login - redirect to Yahoo
+// Yahoo OAuth login - redirect user to Yahoo authorization page
 router.get("/login", (req, res) => {
   const redirectUri = process.env.YAHOO_REDIRECT_URI;
   const clientId = process.env.YAHOO_CLIENT_ID;
-  const linkCode = req.query.state; // Pass link code as state parameter
+  const linkCode = req.query.state; // Link code to associate token with WhatsApp user
   
-  // Include the link code in the state parameter so we can retrieve it later
+  // Build Yahoo OAuth URL with state parameter for user linking
   const url = `https://api.login.yahoo.com/oauth2/request_auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&state=${linkCode}`;
   res.redirect(url);
 });
 
-// Yahoo OAuth callback - exchange code for token
+// Yahoo OAuth callback - exchange authorization code for access token
 router.get("/callback", async (req, res) => {
   const { code, error, state } = req.query;
   
@@ -28,14 +30,10 @@ router.get("/callback", async (req, res) => {
   }
   
   try {
+    // Exchange authorization code for access token
     const tokenData = await exchangeCodeForToken(code as string);
     
-    // If we have a state (link code), link this token to a WhatsApp user
-  const fs = require('fs');
-  const path = require('path');
-  // Always read template from source directory, not build output
-  const templatePath = path.join(process.cwd(), 'src', 'routes', 'oauth-success.html');
-  let html = fs.readFileSync(templatePath, 'utf8');
+    // Link token to WhatsApp user if state (link code) is provided
     let phoneNumber = null;
     if (state) {
       phoneNumber = getPhoneNumberFromLinkCode(state as string);
@@ -43,9 +41,13 @@ router.get("/callback", async (req, res) => {
         storeUserToken(phoneNumber, tokenData);
       }
     }
-    // Replace placeholders
+    
+    // Load and customize success page template
+    const templatePath = path.join(process.cwd(), 'src', 'routes', 'oauth-success.html');
+    let html = fs.readFileSync(templatePath, 'utf8');
     html = html.replace('{{phoneNumber}}', phoneNumber ? phoneNumber : 'Not linked');
-    html = html.replace('{{expiresIn}}', tokenData.expiresIn);
+    html = html.replace('{{expiresIn}}', tokenData.expiresIn.toString());
+    
     return res.send(html);
   } catch (error) {
     console.error("OAuth callback error:", error);

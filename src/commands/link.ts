@@ -1,6 +1,11 @@
 import { generateLinkCode } from "../services/userStorage";
 import { sendWhatsApp } from "../services/twilio";
 
+/**
+ * OAUTH LINK COMMAND
+ * Generates secure Yahoo Fantasy OAuth link for user authentication
+ */
+
 export async function linkCommand({ from }: { from: string }) {
   const linkCode = generateLinkCode(from);
   const baseUrl = process.env.BASE_URL;
