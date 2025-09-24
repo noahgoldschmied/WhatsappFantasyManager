@@ -205,20 +205,20 @@ export async function stateHandler({ from, body, originalBody, state, userData }
         // If teamName is provided, look up key from leagueDict, fallback to userTeams
         if (state?.teamName) {
           const leagueDict = userData?.leagueDict || {};
-          case "showAvailable":
-            if (userData?.accessToken) {
-              const leagueKey = getUserChosenLeague(from);
-              if (!leagueKey) {
-                await sendWhatsApp(from, "You must choose your team first.");
-              } else {
-                const { getAvailablePlayersCommand } = await import("../commands/getAvailable");
-                await getAvailablePlayersCommand({ from, accessToken: userData.accessToken, leagueKey });
+          if (leagueDict && Object.keys(leagueDict).length > 0) {
+            for (const [name, key] of Object.entries(leagueDict)) {
+              if (name.toLowerCase() === state.teamName.toLowerCase()) {
+                teamKey = String(key);
+                break;
               }
-            } else {
-              await sendWhatsApp(from, "You must link your Yahoo account first.");
             }
-            clearConversationState(from);
-            break;
+          }
+          // Fallback to userTeams if not found in leagueDict
+          if (!teamKey) {
+            const userTeams = userData?.userTeams || {};
+            for (const [name, key] of Object.entries(userTeams)) {
+              if (name.toLowerCase() === state.teamName.toLowerCase()) {
+                teamKey = String(key);
                 break;
               }
             }
