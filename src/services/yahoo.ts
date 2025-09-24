@@ -1,3 +1,16 @@
+// Get available free agents in a league
+export async function getAvailablePlayersYahoo(accessToken: string, leagueKey: string) {
+  const url = `https://fantasysports.yahooapis.com/fantasy/v2/league/${leagueKey}/players;status=FA`;
+  const response = await fetch(url, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  });
+  if (!response.ok) throw new Error(`Failed to get available players: ${response.status}`);
+  const xml = await response.text();
+  const data = await parseStringPromise(xml, { explicitArray: false, mergeAttrs: true });
+  const players = data?.fantasy_content?.league?.players?.player;
+  if (!players) return [];
+  return Array.isArray(players) ? players : [players];
+}
 
 import { parseStringPromise } from "xml2js";
 // Yahoo Fantasy API client

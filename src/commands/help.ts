@@ -10,6 +10,7 @@ export async function helpCommand({ from }: { from: string }) {
     '- show teams / choose team — Select your team',
     '- show league — List every team in your league',
     '- show transactions / pending moves — View your pending waivers and trades',
+    '- show available — List free agents you can add',
     '- get roster / get standings / get matchup [week N] — View info',
     '- modify lineup — Change lineup (e.g. "start Mahomes at QB week 3")',
     '- add/drop [player name] — Add/drop players',
