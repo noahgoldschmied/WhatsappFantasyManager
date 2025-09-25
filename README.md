@@ -1,6 +1,8 @@
 
 # Boardy WhatsApp Fantasy Bot
 
+# [Demo Video Here](https://www.loom.com/share/b7b0bdee9e304849bfe2463b52c28992?sid=ffd33979-439e-426a-bfb7-de89cb5d6880)
+
 AI-powered WhatsApp bot for Yahoo Fantasy Sports. Supports robust, stateful, and extensible command flows for team management, trades, waivers, and more.
 
 ## 🚀 Try It Out Now!
