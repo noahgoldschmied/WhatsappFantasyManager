@@ -12,7 +12,8 @@ import { getLeagueStandingsCommand } from "../commands/getStandings";
 import { getScoreboardCommand } from "../commands/getScoreboard";
 import { sendWhatsApp } from "../services/twilio";
 import { chooseTeamCommand } from "../commands/chooseTeam";
-import { getUserChosenTeam, getUserChosenLeague, getLeagueKeyFromTeamKey } from "../services/userStorage";
+import { getUserChosenTeam, getUserChosenLeague, getLeagueKeyFromTeamKey, getUserTeamsDict } from "../services/userStorage";
+import { fetchAndStoreLeagueTeamsForUser } from "../commands/getLeague";
 
 // Central state handler for all bot flows. Each case represents a conversational state.
 export async function stateHandler({ from, body, originalBody, state, userData }: any) {
@@ -233,30 +234,51 @@ export async function stateHandler({ from, body, originalBody, state, userData }
         let teamKey = getUserChosenTeam(from);
         // If specific teamName provided, look up the team key
         if (state?.teamName) {
-          const leagueDict = userData?.leagueDict || {};
+          let foundTeamKey: string | undefined = undefined;
+          
+          // Ensure leagueDict is populated for team lookups
+          let leagueDict = userData?.leagueDict || {};
+          if (!leagueDict || Object.keys(leagueDict).length === 0) {
+            if (userData?.accessToken) {
+              await fetchAndStoreLeagueTeamsForUser({ from, accessToken: userData.accessToken });
+              // Refresh userData after fetching
+              const updatedUserData = require("../services/userStorage").getUserToken(from);
+              leagueDict = updatedUserData?.leagueDict || {};
+            }
+          }
+          
+          // First, try to find in leagueDict (all teams in current league)
           if (leagueDict && Object.keys(leagueDict).length > 0) {
             for (const [name, key] of Object.entries(leagueDict)) {
               if (name.toLowerCase() === state.teamName.toLowerCase()) {
-                teamKey = String(key);
+                foundTeamKey = String(key);
                 break;
               }
             }
           }
-          // Fallback to userTeams if not found in leagueDict
-          if (!teamKey) {
-            const userTeams = userData?.userTeams || {};
+          
+          // Fallback to userTeamsDict if not found in leagueDict
+          if (!foundTeamKey) {
+            const userTeams = getUserTeamsDict(from) || {};
             for (const [name, key] of Object.entries(userTeams)) {
               if (name.toLowerCase() === state.teamName.toLowerCase()) {
-                teamKey = String(key);
+                foundTeamKey = String(key);
                 break;
               }
             }
           }
-          if (!teamKey) {
-            await sendWhatsApp(from, `Could not find team: ${state.teamName}`);
+          
+          if (!foundTeamKey) {
+            // Show available teams if lookup failed
+            const availableTeams = Object.keys(leagueDict).length > 0 
+              ? Object.keys(leagueDict).slice(0, 10).join(", ")
+              : "None found";
+            await sendWhatsApp(from, `❌ Could not find team: "${state.teamName}"\n\nAvailable teams: ${availableTeams}\n\nUse "show league" to see all teams.`);
             clearConversationState(from);
             return;
           }
+          
+          teamKey = foundTeamKey;
         }
         // Execute the roster command and clear state
         await getRosterCommand({ from, accessToken: userData?.accessToken, teamKey });
